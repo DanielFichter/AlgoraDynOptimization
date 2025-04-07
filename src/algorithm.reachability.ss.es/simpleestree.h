@@ -32,7 +32,13 @@
 
 namespace Algora {
 
-template<bool reverseArcDirection = false>
+enum class ParentSelectStrategy
+{
+    firstOptimal,
+    reservoirSampling
+};
+
+template<bool reverseArcDirection = false, ParentSelectStrategy parentSelectStrategy = ParentSelectStrategy::firstOptimal>
 class SimpleESTree : public DynamicSingleSourceReachabilityAlgorithm
 {
 public:

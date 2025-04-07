@@ -55,13 +55,13 @@ void printQueue(boost::circular_buffer<SESVertexData*> q) {
 #endif
 
 
-template<bool reverseArcDirection>
-SimpleESTree<reverseArcDirection>::SimpleESTree(unsigned int requeueLimit, double maxAffectedRatio)
-    : SimpleESTree<reverseArcDirection>(std::make_pair(requeueLimit, maxAffectedRatio))
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+SimpleESTree<reverseArcDirection, parentSelectStrategy>::SimpleESTree(unsigned int requeueLimit, double maxAffectedRatio)
+    : SimpleESTree<reverseArcDirection, parentSelectStrategy>(std::make_pair(requeueLimit, maxAffectedRatio))
 { }
 
-template<bool reverseArcDirection>
-SimpleESTree<reverseArcDirection>::SimpleESTree(const SimpleESTree<reverseArcDirection>::ParameterSet &params)
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+SimpleESTree<reverseArcDirection, parentSelectStrategy>::SimpleESTree(const SimpleESTree<reverseArcDirection, parentSelectStrategy>::ParameterSet &params)
     : DynamicSingleSourceReachabilityAlgorithm(), root(nullptr),
       initialized(false), requeueLimit(std::get<0>(params)),
       maxAffectedRatio(std::get<1>(params)),
@@ -80,14 +80,14 @@ SimpleESTree<reverseArcDirection>::SimpleESTree(const SimpleESTree<reverseArcDir
     timesInQueue.setDefaultValue(0U);
 }
 
-template<bool reverseArcDirection>
-SimpleESTree<reverseArcDirection>::~SimpleESTree()
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+SimpleESTree<reverseArcDirection, parentSelectStrategy>::~SimpleESTree()
 {
     cleanup(true);
 }
 
-template<bool reverseArcDirection>
-DiGraph::size_type SimpleESTree<reverseArcDirection>::getDepthOfBFSTree() const
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+DiGraph::size_type SimpleESTree<reverseArcDirection, parentSelectStrategy>::getDepthOfBFSTree() const
 {
 	DiGraph::size_type maxLevel = 0U;
     diGraph->mapVertices([&](Vertex *v) {
@@ -98,8 +98,8 @@ DiGraph::size_type SimpleESTree<reverseArcDirection>::getDepthOfBFSTree() const
     return maxLevel;
 }
 
-template<bool reverseArcDirection>
-DiGraph::size_type SimpleESTree<reverseArcDirection>::getNumReachable() const
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+DiGraph::size_type SimpleESTree<reverseArcDirection, parentSelectStrategy>::getNumReachable() const
 {
 	DiGraph::size_type numR = 0U;
     diGraph->mapVertices([&](Vertex *v) {
@@ -110,8 +110,8 @@ DiGraph::size_type SimpleESTree<reverseArcDirection>::getNumReachable() const
     return numR;
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::run()
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::run()
 {
     if (initialized) {
         return;
@@ -186,8 +186,8 @@ void SimpleESTree<reverseArcDirection>::run()
    assert(checkTree());
 }
 
-template<bool reverseArcDirection>
-std::string SimpleESTree<reverseArcDirection>::getProfilingInfo() const
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+std::string SimpleESTree<reverseArcDirection, parentSelectStrategy>::getProfilingInfo() const
 {
     std::stringstream ss;
 #ifdef COLLECT_PR_DATA
@@ -214,8 +214,8 @@ std::string SimpleESTree<reverseArcDirection>::getProfilingInfo() const
     return ss.str();
 }
 
-template<bool reverseArcDirection>
-DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTree<reverseArcDirection>::getProfile() const
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTree<reverseArcDirection, parentSelectStrategy>::getProfile() const
 {
     auto profile = DynamicSingleSourceReachabilityAlgorithm::getProfile();
     profile.push_back(std::make_pair(std::string("vertices_moved_down"), movesDown));
@@ -239,8 +239,8 @@ DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTree<reverseArcDirecti
     return profile;
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::onDiGraphSet()
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::onDiGraphSet()
 {
     DynamicSingleSourceReachabilityAlgorithm::onDiGraphSet();
     cleanup(false);
@@ -262,15 +262,15 @@ void SimpleESTree<reverseArcDirection>::onDiGraphSet()
     // called by cleanup
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::onDiGraphUnset()
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::onDiGraphUnset()
 {
     DynamicSingleSourceReachabilityAlgorithm::onDiGraphUnset();
     cleanup(true);
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::onVertexAdd(Vertex *v)
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::onVertexAdd(Vertex *v)
 {
     if (!initialized) {
         return;
@@ -281,8 +281,8 @@ void SimpleESTree<reverseArcDirection>::onVertexAdd(Vertex *v)
     data[v] = new SESVertexData(v);
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::onArcAdd(Arc *a)
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::onArcAdd(Arc *a)
 {
     if (!initialized) {
         return;
@@ -413,8 +413,8 @@ void SimpleESTree<reverseArcDirection>::onArcAdd(Arc *a)
    assert(checkTree());
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::onVertexRemove(Vertex *v)
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::onVertexRemove(Vertex *v)
 {
     if (!initialized) {
         return;
@@ -428,8 +428,8 @@ void SimpleESTree<reverseArcDirection>::onVertexRemove(Vertex *v)
      }
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::onArcRemove(Arc *a)
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::onArcRemove(Arc *a)
 {
    if (!initialized) {
         return;
@@ -495,14 +495,14 @@ void SimpleESTree<reverseArcDirection>::onArcRemove(Arc *a)
    assert(checkTree());
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::onSourceSet()
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::onSourceSet()
 {
     cleanup(false);
 }
 
-template<bool reverseArcDirection>
-bool SimpleESTree<reverseArcDirection>::query(const Vertex *t)
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+bool SimpleESTree<reverseArcDirection, parentSelectStrategy>::query(const Vertex *t)
 {
     PRINT_DEBUG("Querying reachability of " << t);
     if (t == source) {
@@ -518,8 +518,8 @@ bool SimpleESTree<reverseArcDirection>::query(const Vertex *t)
     return reachable(t);
 }
 
-template<bool reverseArcDirection>
-std::vector<Arc *> SimpleESTree<reverseArcDirection>::queryPath(const Vertex *t)
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+std::vector<Arc *> SimpleESTree<reverseArcDirection, parentSelectStrategy>::queryPath(const Vertex *t)
 {
     std::vector<Arc*> path;
     if (!query(t) || t == source) {
@@ -540,8 +540,8 @@ std::vector<Arc *> SimpleESTree<reverseArcDirection>::queryPath(const Vertex *t)
     return path;
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::dumpData(std::ostream &os) const
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::dumpData(std::ostream &os) const
 {
     if (!initialized) {
         os << "uninitialized" << std::endl;
@@ -562,8 +562,8 @@ void SimpleESTree<reverseArcDirection>::dumpData(std::ostream &os) const
     }
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::dumpTree(std::ostream &os)
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::dumpTree(std::ostream &os)
 {
     if (!initialized) {
         os << "uninitialized" << std::endl;
@@ -576,8 +576,8 @@ void SimpleESTree<reverseArcDirection>::dumpTree(std::ostream &os)
     }
 }
 
-template<bool reverseArcDirection>
-bool SimpleESTree<reverseArcDirection>::checkTree()
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+bool SimpleESTree<reverseArcDirection, parentSelectStrategy>::checkTree()
 {
    BreadthFirstSearch<FastPropertyMap,true,reverseArcDirection> bfs;
    bfs.setStartVertex(source);
@@ -599,8 +599,8 @@ bool SimpleESTree<reverseArcDirection>::checkTree()
    return ok;
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::rerun()
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::rerun()
 {
 #ifdef COLLECT_PR_DATA
     reruns++;
@@ -612,8 +612,8 @@ void SimpleESTree<reverseArcDirection>::rerun()
     run();
 }
 
-template<bool reverseArcDirection>
-DiGraph::size_type SimpleESTree<reverseArcDirection>::process(SESVertexData *vd, bool &limitReached) {
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+DiGraph::size_type SimpleESTree<reverseArcDirection, parentSelectStrategy>::process(SESVertexData *vd, bool &limitReached) {
 
     if (vd->level == 0UL) {
         PRINT_DEBUG("No need to process source vertex " << vd << ".");
@@ -645,37 +645,41 @@ DiGraph::size_type SimpleESTree<reverseArcDirection>::process(SESVertexData *vd,
 
     PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
 
-    auto findParent = [this,&parent,&minParentLevel,&oldVLevel,&treeArc](Arc *a) {
+    if constexpr(parentSelectStrategy == ParentSelectStrategy::firstOptimal)
+    {
+        auto findParent = [this,&parent,&minParentLevel,&oldVLevel,&treeArc](Arc *a) {
 #ifdef COLLECT_PR_DATA
-            prArcConsidered();
+                prArcConsidered();
 #endif
-        if (a->isLoop()) {
-            PRINT_DEBUG( "Loop ignored.");
-            return;
-        }
-        auto pd = data(reverseArcDirection ? a->getHead() : a->getTail());
+            if (a->isLoop()) {
+                PRINT_DEBUG( "Loop ignored.");
+                return;
+            }
+            auto pd = data(reverseArcDirection ? a->getHead() : a->getTail());
 #ifdef COLLECT_PR_DATA
-            prVertexConsidered();
+                prVertexConsidered();
 #endif
-        auto pLevel = pd->level;
-        if (pLevel < minParentLevel) {
-            minParentLevel = pLevel;
-            parent = pd;
-            treeArc = a;
-            PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
-                        << ", parent " << parent);
-            assert (minParentLevel + 1 >= oldVLevel);
-        }
-    };
-    auto abortReparenting = [&oldVLevel, &minParentLevel](const Arc *) {
-        return minParentLevel + 1 == oldVLevel;
-    };
+            auto pLevel = pd->level;
+            if (pLevel < minParentLevel) {
+                minParentLevel = pLevel;
+                parent = pd;
+                treeArc = a;
+                PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
+                            << ", parent " << parent);
+                assert (minParentLevel + 1 >= oldVLevel);
+            }
+        };
+        auto abortReparenting = [&oldVLevel, &minParentLevel](const Arc *) {
+            return minParentLevel + 1 == oldVLevel;
+        };
 
-    if (reverseArcDirection) {
-        diGraph->mapOutgoingArcsUntil(v, findParent, abortReparenting);
-    } else {
-        diGraph->mapIncomingArcsUntil(v, findParent, abortReparenting);
+        if (reverseArcDirection) {
+            diGraph->mapOutgoingArcsUntil(v, findParent, abortReparenting);
+        } else {
+            diGraph->mapIncomingArcsUntil(v, findParent, abortReparenting);
+        }
     }
+    
 
     DiGraph::size_type levelDiff = 0U;
     auto n = diGraph->getSize();
@@ -741,8 +745,8 @@ DiGraph::size_type SimpleESTree<reverseArcDirection>::process(SESVertexData *vd,
     return levelDiff;
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::restoreTree(SESVertexData *rd)
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::restoreTree(SESVertexData *rd)
 {
     auto n = diGraph->getSize();
     DiGraph::size_type affectedLimit = maxAffectedRatio < 1.0
@@ -800,8 +804,8 @@ void SimpleESTree<reverseArcDirection>::restoreTree(SESVertexData *rd)
 #endif
 }
 
-template<bool reverseArcDirection>
-void SimpleESTree<reverseArcDirection>::cleanup(bool freeSpace)
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+void SimpleESTree<reverseArcDirection, parentSelectStrategy>::cleanup(bool freeSpace)
 {
     if (initialized) {
         for (auto i = data.cbegin(); i != data.cend(); i++) {
