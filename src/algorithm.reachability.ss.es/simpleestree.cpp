@@ -25,6 +25,7 @@
 #include <vector>
 #include <climits>
 #include <cassert>
+#include <random>
 
 #include "graph/vertex.h"
 #include "algorithm.basic.traversal/breadthfirstsearch.h"
@@ -40,6 +41,16 @@
 #define PRINT_DEBUG(msg) ((void)0);
 #define IF_DEBUG(cmd)
 #endif
+
+namespace
+{
+    Algora::Arc* selectRandomTreeArc(const std::vector<Algora::Arc*>& potentialTreeArcs)
+    {
+        std::subtract_with_carry_engine<std::vector<Algora::Arc*>::size_type, 48, 5, 12> generateRandomNumber;
+        const size_t arcIndex = generateRandomNumber() % potentialTreeArcs.size();
+        return potentialTreeArcs.at(arcIndex);
+    }
+}
 
 namespace Algora {
 
@@ -679,6 +690,48 @@ DiGraph::size_type SimpleESTree<reverseArcDirection, parentSelectStrategy>::proc
             diGraph->mapIncomingArcsUntil(v, findParent, abortReparenting);
         }
     }
+    else if constexpr(parentSelectStrategy == ParentSelectStrategy::randomOptimal)
+    {
+        std::vector<Arc*> potentialTreeArcs;
+        auto findParent = [this, &potentialTreeArcs, &minParentLevel, &oldVLevel] (Arc *a) {
+#ifdef COLLECT_PR_DATA
+                prArcConsidered();
+#endif
+            if (a->isLoop()) {
+                PRINT_DEBUG( "Loop ignored.");
+                return;
+            }
+            auto pd = data(reverseArcDirection ? a->getHead() : a->getTail());
+#ifdef COLLECT_PR_DATA
+                prVertexConsidered();
+#endif
+            auto pLevel = pd->level;
+            if (pLevel <= minParentLevel) {
+                if (pLevel != minParentLevel)
+                {
+                    potentialTreeArcs.clear();
+                    minParentLevel = pLevel;
+                }
+                potentialTreeArcs.push_back(a);
+
+                PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
+                    << ", vertex " << parent << " added to potential parent list");
+                assert (minParentLevel + 1 >= oldVLevel);
+            }
+        };
+
+        if (reverseArcDirection) {
+            diGraph->mapOutgoingArcs(v, findParent);
+        } else {
+            diGraph->mapIncomingArcs(v, findParent);
+        }
+
+        if (!potentialTreeArcs.empty())
+        {
+            treeArc = selectRandomTreeArc(potentialTreeArcs);
+            parent = data(reverseArcDirection ? treeArc->getHead() : treeArc->getTail());
+        }
+    }
     
 
     DiGraph::size_type levelDiff = 0U;
@@ -831,6 +884,8 @@ void SimpleESTree<reverseArcDirection, parentSelectStrategy>::cleanup(bool freeS
     initialized = false;
 }
 
-template class SimpleESTree<false>;
-template class SimpleESTree<true>;
+template class SimpleESTree<false, ParentSelectStrategy::firstOptimal>;
+template class SimpleESTree<true, ParentSelectStrategy::firstOptimal>;
+template class SimpleESTree<false, ParentSelectStrategy::randomOptimal>;
+template class SimpleESTree<true, ParentSelectStrategy::randomOptimal>;
 }
