@@ -35,7 +35,7 @@ namespace Algora {
 enum class ParentSelectStrategy
 {
     firstOptimal,
-    reservoirSampling
+    randomOptimal
 };
 
 template<bool reverseArcDirection = false, ParentSelectStrategy parentSelectStrategy = ParentSelectStrategy::firstOptimal>
@@ -143,8 +143,10 @@ private:
 };
 
 // explicit instantiation declaration
-extern template class SimpleESTree<false>;
-extern template class SimpleESTree<true>;
+extern template class SimpleESTree<false, ParentSelectStrategy::firstOptimal>;
+extern template class SimpleESTree<true, ParentSelectStrategy::firstOptimal>;
+extern template class SimpleESTree<false, ParentSelectStrategy::randomOptimal>;
+extern template class SimpleESTree<true, ParentSelectStrategy::randomOptimal>;
 }
 
 #endif // SIMPLEESTREE_H
