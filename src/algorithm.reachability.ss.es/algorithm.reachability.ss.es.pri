@@ -6,7 +6,8 @@ HEADERS += \
     $$PWD/esvertexdata.h \
     $$PWD/estree-queue.h \
     $$PWD/estree-bqueue.h \
-    $$PWD/sesvertexdata.h
+    $$PWD/sesvertexdata.h \
+    $$PWD/simpleestree_selectrandom.h 
 
 SOURCES += \
     $$PWD/estree-ml.cpp \
@@ -14,4 +15,5 @@ SOURCES += \
     $$PWD/esvertexdata.cpp \
     $$PWD/estree-queue.cpp \
     $$PWD/estree-bqueue.cpp \
-    $$PWD/sesvertexdata.cpp
+    $$PWD/sesvertexdata.cpp \
+    $$PWD/simpleestree_selectrandom.cpp
