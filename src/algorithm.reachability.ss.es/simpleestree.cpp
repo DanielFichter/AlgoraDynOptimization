@@ -25,7 +25,6 @@
 #include <vector>
 #include <climits>
 #include <cassert>
-#include <random>
 
 #include "graph/vertex.h"
 #include "algorithm.basic.traversal/breadthfirstsearch.h"
@@ -41,16 +40,6 @@
 #define PRINT_DEBUG(msg) ((void)0);
 #define IF_DEBUG(cmd)
 #endif
-
-namespace
-{
-    Algora::Arc* selectRandomTreeArc(const std::vector<Algora::Arc*>& potentialTreeArcs)
-    {
-        std::subtract_with_carry_engine<std::vector<Algora::Arc*>::size_type, 48, 5, 12> generateRandomNumber;
-        const size_t arcIndex = generateRandomNumber() % potentialTreeArcs.size();
-        return potentialTreeArcs.at(arcIndex);
-    }
-}
 
 namespace Algora {
 
@@ -692,8 +681,7 @@ DiGraph::size_type SimpleESTree<reverseArcDirection, parentSelectStrategy>::proc
     }
     else if constexpr(parentSelectStrategy == ParentSelectStrategy::randomOptimal)
     {
-        std::vector<Arc*> potentialTreeArcs;
-        auto findParent = [this, &potentialTreeArcs, &minParentLevel, &oldVLevel] (Arc *a) {
+        auto findParent = [this, &minParentLevel, &oldVLevel] (Arc *a) {
 #ifdef COLLECT_PR_DATA
                 prArcConsidered();
 #endif
@@ -712,7 +700,7 @@ DiGraph::size_type SimpleESTree<reverseArcDirection, parentSelectStrategy>::proc
                     potentialTreeArcs.clear();
                     minParentLevel = pLevel;
                 }
-                potentialTreeArcs.push_back(a);
+                potentialTreeArcs.insert(a);
 
                 PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
                     << ", vertex " << parent << " added to potential parent list");
@@ -730,6 +718,7 @@ DiGraph::size_type SimpleESTree<reverseArcDirection, parentSelectStrategy>::proc
         {
             treeArc = selectRandomTreeArc(potentialTreeArcs);
             parent = data(reverseArcDirection ? treeArc->getHead() : treeArc->getTail());
+            potentialTreeArcs.clear();
         }
     }
     
@@ -882,6 +871,13 @@ void SimpleESTree<reverseArcDirection, parentSelectStrategy>::cleanup(bool freeS
     }
 
     initialized = false;
+}
+
+template<bool reverseArcDirection, ParentSelectStrategy parentSelectStrategy>
+Arc* SimpleESTree<reverseArcDirection, parentSelectStrategy>::selectRandomTreeArc(const ArcPool& potentialTreeArcs)
+{
+    const size_t arcIndex = generateRandomNumber() % potentialTreeArcs.size();
+    return potentialTreeArcs.at(arcIndex);
 }
 
 template class SimpleESTree<false, ParentSelectStrategy::firstOptimal>;

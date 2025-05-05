@@ -28,9 +28,60 @@
 #include "property/fastpropertymap.h"
 #include "sesvertexdata.h"
 #include <sstream>
+#include <random>
 #include <boost/circular_buffer.hpp>
 
 namespace Algora {
+
+class ArcPool
+{
+public:
+    void insert(Arc* arc)
+    {
+        if (arraySize < nArcs + 1)
+        {
+            arraySize *= 2;
+            Arc** newData = new Arc*[arraySize];
+            for (size_t arcIndex = 0; arcIndex < nArcs; arcIndex++)
+            {
+                newData[arcIndex] = data[arcIndex];
+            }
+            delete data;
+            data = newData;
+        }
+        data[++nArcs] = arc;
+    }
+
+    void clear()
+    {
+        nArcs = 0;
+    }
+
+    ~ArcPool()
+    {
+        delete data;
+    }
+
+    bool empty() const
+    {
+        return nArcs == 0;
+    }
+
+    size_t size() const
+    {
+        return nArcs;
+    }
+
+    Arc* at (size_t index) const
+    {
+        return data[index];
+    }
+
+private:
+    Arc** data = new Arc*[5];
+    size_t nArcs = 0;
+    size_t arraySize = 5;
+};
 
 enum class ParentSelectStrategy
 {
@@ -133,8 +184,11 @@ private:
     profiling_counter totalAffected;
     profiling_counter rerunRequeued;
     profiling_counter rerunNumAffected;
+    ArcPool potentialTreeArcs;
+    std::subtract_with_carry_engine<std::vector<Algora::Arc*>::size_type, 48, 5, 12> generateRandomNumber;
 
     void restoreTree(SESVertexData *rd);
+    Algora::Arc* selectRandomTreeArc(const ArcPool& potentialTreeArcs);
     void cleanup(bool freeSpace);
     void dumpTree(std::ostream &os);
     bool checkTree();
