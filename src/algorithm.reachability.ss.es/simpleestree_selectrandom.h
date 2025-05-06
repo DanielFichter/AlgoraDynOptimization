@@ -89,6 +89,11 @@ enum class ParentSelectStrategy
     randomOptimal
 };
 
+/*
+ * The same as SimpleESTree with the difference that, if the parent of a node in the bfs tree
+ * is removed from the graph, a new parent for that node in the bfs tree is selected at random
+ * and not by 
+*/
 template<bool reverseArcDirection = false>
 class SimpleESTreeSelectRandom : public DynamicSingleSourceReachabilityAlgorithm
 {
