@@ -20,8 +20,8 @@
  *   http://algora.xaikal.org
  */
 
-#ifndef SIMPLEESTREE_H
-#define SIMPLEESTREE_H
+#ifndef SIMPLEESTREESELECTRANDOM_H
+#define SIMPLEESTREESELECTRANDOM_H
 
 #include "algorithm.reachability.ss/dynamicsinglesourcereachabilityalgorithm.h"
 #include "property/propertymap.h"
