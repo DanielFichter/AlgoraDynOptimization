@@ -7,7 +7,8 @@ HEADERS += \
     $$PWD/estree-queue.h \
     $$PWD/estree-bqueue.h \
     $$PWD/sesvertexdata.h \
-    $$PWD/simpleestree_selectrandom.h 
+    $$PWD/simpleestree_selectrandom.h \
+    $$PWD/simpleestree_multipletreearcs.h
 
 SOURCES += \
     $$PWD/estree-ml.cpp \
@@ -16,4 +17,5 @@ SOURCES += \
     $$PWD/estree-queue.cpp \
     $$PWD/estree-bqueue.cpp \
     $$PWD/sesvertexdata.cpp \
-    $$PWD/simpleestree_selectrandom.cpp
+    $$PWD/simpleestree_selectrandom.cpp \
+    $$PWD/simpleestree_multipletreearcs.cpp
