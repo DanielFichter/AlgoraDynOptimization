@@ -57,18 +57,17 @@ namespace Algora
     }
 #endif
 
-    template <bool reverseArcDirection>
-    SimpleESTreeMultipleTreeArcs<reverseArcDirection>::SimpleESTreeMultipleTreeArcs(unsigned int requeueLimit, double maxAffectedRatio, unsigned int maxNTreeArcs)
-        : SimpleESTreeMultipleTreeArcs<reverseArcDirection>(std::make_tuple(requeueLimit, maxAffectedRatio, maxNTreeArcs))
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::SimpleESTreeMultipleTreeArcs(unsigned int requeueLimit, double maxAffectedRatio)
+        : SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>(std::make_tuple(requeueLimit, maxAffectedRatio))
     {
     }
 
-    template <bool reverseArcDirection>
-    SimpleESTreeMultipleTreeArcs<reverseArcDirection>::SimpleESTreeMultipleTreeArcs(const SimpleESTreeMultipleTreeArcs<reverseArcDirection>::ParameterSet &params)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::SimpleESTreeMultipleTreeArcs(const SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::ParameterSet &params)
         : DynamicSingleSourceReachabilityAlgorithm(), root(nullptr),
           initialized(false), requeueLimit(std::get<0>(params)),
           maxAffectedRatio(std::get<1>(params)),
-          maxNTreeArcs(std::get<2>(params)),
           movesDown(0U), movesUp(0U),
           levelIncrease(0U), levelDecrease(0U),
           maxLevelIncrease(0U), maxLevelDecrease(0U),
@@ -84,14 +83,14 @@ namespace Algora
         timesInQueue.setDefaultValue(0U);
     }
 
-    template <bool reverseArcDirection>
-    SimpleESTreeMultipleTreeArcs<reverseArcDirection>::~SimpleESTreeMultipleTreeArcs()
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::~SimpleESTreeMultipleTreeArcs()
     {
         cleanup(true);
     }
 
-    template <bool reverseArcDirection>
-    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection>::getDepthOfBFSTree() const
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::getDepthOfBFSTree() const
     {
         DiGraph::size_type maxLevel = 0U;
         diGraph->mapVertices([&](Vertex *v)
@@ -102,8 +101,8 @@ namespace Algora
         return maxLevel;
     }
 
-    template <bool reverseArcDirection>
-    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection>::getNumReachable() const
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::getNumReachable() const
     {
         DiGraph::size_type numR = 0U;
         diGraph->mapVertices([&](Vertex *v)
@@ -114,8 +113,8 @@ namespace Algora
         return numR;
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::run()
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::run()
     {
         if (initialized)
         {
@@ -205,8 +204,8 @@ namespace Algora
         assert(checkTree());
     }
 
-    template <bool reverseArcDirection>
-    std::string SimpleESTreeMultipleTreeArcs<reverseArcDirection>::getProfilingInfo() const
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    std::string SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::getProfilingInfo() const
     {
         std::stringstream ss;
 #ifdef COLLECT_PR_DATA
@@ -233,8 +232,8 @@ namespace Algora
         return ss.str();
     }
 
-    template <bool reverseArcDirection>
-    DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeMultipleTreeArcs<reverseArcDirection>::getProfile() const
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::getProfile() const
     {
         auto profile = DynamicSingleSourceReachabilityAlgorithm::getProfile();
         profile.push_back(std::make_pair(std::string("vertices_moved_down"), movesDown));
@@ -258,8 +257,8 @@ namespace Algora
         return profile;
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::onDiGraphSet()
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onDiGraphSet()
     {
         DynamicSingleSourceReachabilityAlgorithm::onDiGraphSet();
         cleanup(false);
@@ -281,15 +280,15 @@ namespace Algora
         // called by cleanup
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::onDiGraphUnset()
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onDiGraphUnset()
     {
         DynamicSingleSourceReachabilityAlgorithm::onDiGraphUnset();
         cleanup(true);
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::onVertexAdd(Vertex *v)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onVertexAdd(Vertex *v)
     {
         if (!initialized)
         {
@@ -301,8 +300,8 @@ namespace Algora
         data[v] = new SESVertexData(v);
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::onArcAdd(Arc *a)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onArcAdd(Arc *a)
     {
         if (!initialized)
         {
@@ -447,8 +446,8 @@ namespace Algora
         assert(checkTree());
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::onVertexRemove(Vertex *v)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onVertexRemove(Vertex *v)
     {
         if (!initialized)
         {
@@ -464,8 +463,8 @@ namespace Algora
         }
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::onArcRemove(Arc *a)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onArcRemove(Arc *a)
     {
         if (!initialized)
         {
@@ -544,14 +543,14 @@ namespace Algora
         assert(checkTree());
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::onSourceSet()
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onSourceSet()
     {
         cleanup(false);
     }
 
-    template <bool reverseArcDirection>
-    bool SimpleESTreeMultipleTreeArcs<reverseArcDirection>::query(const Vertex *t)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    bool SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::query(const Vertex *t)
     {
         PRINT_DEBUG("Querying reachability of " << t);
         if (t == source)
@@ -569,8 +568,8 @@ namespace Algora
         return reachable(t);
     }
 
-    template <bool reverseArcDirection>
-    std::vector<Arc *> SimpleESTreeMultipleTreeArcs<reverseArcDirection>::queryPath(const Vertex *t)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    std::vector<Arc *> SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::queryPath(const Vertex *t)
     {
         std::vector<Arc *> path;
         if (!query(t) || t == source)
@@ -594,8 +593,8 @@ namespace Algora
         return path;
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::dumpData(std::ostream &os) const
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::dumpData(std::ostream &os) const
     {
         if (!initialized)
         {
@@ -622,8 +621,8 @@ namespace Algora
         }
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::dumpTree(std::ostream &os)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::dumpTree(std::ostream &os)
     {
         if (!initialized)
         {
@@ -639,8 +638,8 @@ namespace Algora
         }
     }
 
-    template <bool reverseArcDirection>
-    bool SimpleESTreeMultipleTreeArcs<reverseArcDirection>::checkTree()
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    bool SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::checkTree()
     {
         BreadthFirstSearch<FastPropertyMap, true, reverseArcDirection> bfs;
         bfs.setStartVertex(source);
@@ -662,8 +661,8 @@ namespace Algora
         return ok;
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::rerun()
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::rerun()
     {
 #ifdef COLLECT_PR_DATA
         reruns++;
@@ -674,8 +673,8 @@ namespace Algora
         run();
     }
 
-    template <bool reverseArcDirection>
-    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection>::process(SESVertexData *vd, bool &limitReached)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::process(SESVertexData *vd, bool &limitReached)
     {
 
         if (vd->level == 0UL)
@@ -829,8 +828,8 @@ namespace Algora
         return levelDiff;
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::restoreTree(SESVertexData *rd)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::restoreTree(SESVertexData *rd)
     {
         auto n = diGraph->getSize();
         DiGraph::size_type affectedLimit = maxAffectedRatio < 1.0
@@ -898,8 +897,8 @@ namespace Algora
 #endif
     }
 
-    template <bool reverseArcDirection>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection>::cleanup(bool freeSpace)
+    template <bool reverseArcDirection, unsigned maxNTreeArcs>
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::cleanup(bool freeSpace)
     {
         if (initialized)
         {

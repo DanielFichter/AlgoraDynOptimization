@@ -33,14 +33,14 @@
 namespace Algora
 {
 
-    template <bool reverseArcDirection = false>
+    template <bool reverseArcDirection = false, unsigned maxNTreeArcs = 2>
     class SimpleESTreeMultipleTreeArcs : public DynamicSingleSourceReachabilityAlgorithm
     {
     public:
         // requeueLimit, maxAffectedRatio
-        typedef std::tuple<unsigned int, double, unsigned int> ParameterSet;
+        typedef std::tuple<unsigned int, double> ParameterSet;
 
-        explicit SimpleESTreeMultipleTreeArcs(unsigned int requeueLimit = 5, double maxAffectedRatio = .5, unsigned int maxNTreeArcs = 2);
+        explicit SimpleESTreeMultipleTreeArcs(unsigned int requeueLimit = 5, double maxAffectedRatio = .5);
         explicit SimpleESTreeMultipleTreeArcs(const ParameterSet &params);
         virtual ~SimpleESTreeMultipleTreeArcs() override;
         void setRequeueLimit(unsigned int limit)
@@ -121,7 +121,6 @@ namespace Algora
         bool initialized;
         unsigned int requeueLimit;
         double maxAffectedRatio;
-        unsigned int maxNTreeArcs;
 
         profiling_counter movesDown;
         profiling_counter movesUp;
