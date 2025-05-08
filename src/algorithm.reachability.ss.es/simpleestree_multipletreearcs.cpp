@@ -45,7 +45,7 @@ namespace Algora
 {
 
 #ifdef DEBUG_SIMPLEESTREE
-    void printQueue(boost::circular_buffer<SESVertexData *> q)
+    void printQueue(boost::circular_buffer<SESVertexDataMultipleParents<maxNTreeArcs> *> q)
     {
         std::cerr << "PriorityQueue: ";
         while (!q.empty())
@@ -141,13 +141,15 @@ namespace Algora
         bfs.setStartVertex(root);
         if (data[root] == nullptr)
         {
-            data[root] = new SESVertexData(root, nullptr, nullptr, 0);
+            data[root] = new SESVertexDataMultipleParents<maxNTreeArcs>(root, {}, {}, 0);
         }
         else
         {
-            data[root]->reset(nullptr, nullptr, 0);
+            data[root]->reset({}, {}, 0);
         }
         reachable[root] = true;
+        // TODO: use on ArcDiscovered and add tree arc if it has the same level as the existing once
+        // maybe call data.resetAll first
         bfs.onTreeArcDiscover([this](Arc *a)
                               {
 #ifdef COLLECT_PR_DATA
@@ -168,11 +170,12 @@ namespace Algora
                                   }
                                   if (data[h] == nullptr)
                                   {
-                                      data[h] = new SESVertexData(h, data(t), a);
+                                      data[h] = new SESVertexDataMultipleParents<maxNTreeArcs>(h, {data(t)}, {a});
                                   }
                                   else
                                   {
-                                      data[h]->reset(data(t), a);
+                                      // TODO: if level(t) + 1 == level(h), try to add parent
+                                      data[h]->reset({data(t)}, {a});
                                   }
                                   reachable[h] = true;
                                   PRINT_DEBUG("(" << a->getTail() << ", " << a->getHead() << ")" << " is a tree arc.")
@@ -188,7 +191,7 @@ namespace Algora
          prVertexConsidered();
 #endif
         if (data(v) == nullptr) {
-            data[v] = new SESVertexData(v);
+            data[v] = new SESVertexDataMultipleParents<maxNTreeArcs>(v);
             PRINT_DEBUG( v << " is a unreachable.")
         } });
 
@@ -297,7 +300,7 @@ namespace Algora
 
         assert(data(v) == nullptr);
 
-        data[v] = new SESVertexData(v);
+        data[v] = new SESVertexDataMultipleParents<maxNTreeArcs>(v);
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
@@ -355,6 +358,11 @@ namespace Algora
 #endif
 
         // update...
+
+        /*
+         * TODO: if hd->level == td->level + 1, try to add new parent td
+         * if td->level + 1 < hd->level, replace parents
+         */
         if (hd->level <= td->level + 1)
         {
             // arc does not change anything
@@ -378,7 +386,7 @@ namespace Algora
                 levelDecrease += (hd->level - (td->level + 1));
             }
 #endif
-            hd->setParent(td, a);
+            hd->replaceParents(td, a);
             reachable[head] = true;
         }
 
@@ -414,6 +422,8 @@ namespace Algora
 #ifdef COLLECT_PR_DATA
          prVertexConsidered();
 #endif
+         // TODO: if atd->level + 1 == ahd-> level and atd != data(ahd)->getParentsData(), add parent
+         // if atd->level + 1 < ahd->level, replace parents
          if (!ahd->isReachable() ||  atd->level + 1 < ahd->level) {
 #ifdef COLLECT_PR_DATA
              movesUp++;
@@ -427,7 +437,7 @@ namespace Algora
                  maxLevelDecrease = dec;
              }
 #endif
-             ahd->setParent(atd, const_cast<Arc*>(a));
+             ahd->replaceParents(atd, const_cast<Arc*>(a));
              reachable[ah] = true;
              PRINT_DEBUG( "(" << a->getTail() << ", " << a->getHead() << ")" << " is a new tree arc.");
              return true;
@@ -520,10 +530,9 @@ namespace Algora
             return;
         }
 
-        if (hd->isTreeArc(a))
+        if (hd->isOnlyTreeArc(a))
         {
-            hd->parent = nullptr;
-            hd->treeArc = nullptr;
+            hd->reset({}, {}, hd->getLevel());
             restoreTree(hd);
         }
         else
@@ -579,7 +588,7 @@ namespace Algora
 
         while (t != source)
         {
-            auto *a = data(t)->getTreeArc();
+            auto *a = data(t)->getTreeArc(0);
             path.push_back(a);
             t = reverseArcDirection ? a->getHead() : a->getTail();
         }
@@ -610,8 +619,8 @@ namespace Algora
             os << "Tree in dot format:\ndigraph SESTree {\n";
             for (const auto vd : data)
             {
-                auto treeArc = vd->getTreeArc();
-                if (treeArc)
+                const auto treeArcs = vd->getExistingTreeArcs();
+                for (const auto *treeArc : treeArcs)
                 {
                     os << treeArc->getTail()->getName() << " -> "
                        << treeArc->getHead()->getName() << ";\n";
@@ -632,9 +641,38 @@ namespace Algora
         {
             diGraph->mapVertices([&](Vertex *v)
                                  {
-           auto vd = data[v];
-           os << v << ": L " << vd->level << ", A " << vd->getTreeArc() << ", P " <<
-                 vd->getParent() << '\n'; });
+                auto vd = data[v];
+                const auto treeArcs = vd->getExistingTreeArcs();
+
+                os << v << ": L " << vd->level << ", A [";
+                bool first = true;
+                for (const auto* treeArc: treeArcs)
+                {
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            os << ", ";
+                        }
+                        os << treeArc;
+                }
+                os << "], P [";
+                first = true;
+                for (const auto* parent: vd->getParents())
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        os << ", ";
+                    }
+                    os << parent;
+                }
+                os << "]\n"; });
         }
     }
 
@@ -652,7 +690,7 @@ namespace Algora
         bool ok = true;
         diGraph->mapVertices([&](Vertex *v)
                              {
-        auto bfsLevel = levels[v] == bfs.INF ? SESVertexData::UNREACHABLE : levels[v];
+        auto bfsLevel = levels[v] == bfs.INF ? SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE : levels[v];
         if (data[v]->level != bfsLevel) {
             std::cerr << "Level mismatch for vertex " << data[v]
                          << ": expected level " << bfsLevel << std::endl;
@@ -674,7 +712,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::process(SESVertexData *vd, bool &limitReached)
+    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::process(SESVertexDataMultipleParents<maxNTreeArcs> *vd, bool &limitReached)
     {
 
         if (vd->level == 0UL)
@@ -691,9 +729,11 @@ namespace Algora
         PRINT_DEBUG("Processing vertex " << vd << ".");
         Vertex *v = vd->getVertex();
 
-        auto oldParent = vd->getParentData();
+        // TODO: consider all existing parents
+        auto oldParent = vd->getParentsData()[0];
 
-        if (vd->hasValidParent())
+        // TODO: is it possible that only some of the parents are invalid?
+        if (vd->discardInvalidParents())
         {
             PRINT_DEBUG("Parent still valid. No further processing required.");
             return 0U;
@@ -704,10 +744,15 @@ namespace Algora
             return 0U;
         }
 
+        // TODO: save number of existing parents in a variable
+        // TODO: make "parent" an array
+        // pick the parents with the lowest level, as parents can have different levels at this point!
         auto parent = oldParent;
         auto oldVLevel = vd->level;
-        auto minParentLevel = parent == nullptr ? SESVertexData::UNREACHABLE : parent->level;
-        auto treeArc = vd->treeArc;
+        // TODO: Why do we need to check for null here? We already know that the parent is valid.
+        auto minParentLevel = parent == nullptr ? SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE : parent->level;
+        // TODO: make "treeArc" an array
+        auto treeArc = vd->getTreeArc(0);
 
         PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
 
@@ -721,6 +766,7 @@ namespace Algora
                 PRINT_DEBUG("Loop ignored.");
                 return;
             }
+            // TODO: use the whole array
             auto pd = data(reverseArcDirection ? a->getHead() : a->getTail());
 #ifdef COLLECT_PR_DATA
             prVertexConsidered();
@@ -729,6 +775,8 @@ namespace Algora
             if (pLevel < minParentLevel)
             {
                 minParentLevel = pLevel;
+
+                // TODO: reset arrays and set new value
                 parent = pd;
                 treeArc = a;
                 PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
@@ -753,6 +801,7 @@ namespace Algora
         DiGraph::size_type levelDiff = 0U;
         auto n = diGraph->getSize();
 
+        // TODO: check if nParents == 0 instead of parent == nullptr
         if ((parent == nullptr || minParentLevel >= n - 1) && vd->isReachable())
         {
             vd->setUnreachable();
@@ -761,11 +810,14 @@ namespace Algora
             PRINT_DEBUG("No parent or parent is unreachable. Vertex is unreachable. Level diff "
                         << levelDiff);
         }
+
+        // TODO: use arrays
         else if (parent != oldParent || oldVLevel <= minParentLevel)
         {
             assert(parent->isReachable());
-            assert(minParentLevel != SESVertexData::UNREACHABLE);
-            vd->setParent(parent, treeArc);
+            assert(minParentLevel != SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE);
+            // TODO: use arrays
+            vd->replaceParents(parent, treeArc);
             assert(vd->level >= oldVLevel);
             levelDiff = vd->level - oldVLevel;
             PRINT_DEBUG("Parent has changed, new parent is " << parent);
@@ -829,7 +881,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::restoreTree(SESVertexData *rd)
+    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::restoreTree(SESVertexDataMultipleParents<maxNTreeArcs> *rd)
     {
         auto n = diGraph->getSize();
         DiGraph::size_type affectedLimit = maxAffectedRatio < 1.0
@@ -930,6 +982,8 @@ namespace Algora
         initialized = false;
     }
 
-    template class SimpleESTreeMultipleTreeArcs<false>;
-    template class SimpleESTreeMultipleTreeArcs<true>;
+    template class SimpleESTreeMultipleTreeArcs<false, 2>;
+    template class SimpleESTreeMultipleTreeArcs<true, 2>;
+    template class SimpleESTreeMultipleTreeArcs<false, 3>;
+    template class SimpleESTreeMultipleTreeArcs<true, 3>;
 }

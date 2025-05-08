@@ -26,7 +26,7 @@
 #include "algorithm.reachability.ss/dynamicsinglesourcereachabilityalgorithm.h"
 #include "property/propertymap.h"
 #include "property/fastpropertymap.h"
-#include "sesvertexdata.h"
+#include "sesvertexdatamultipleparents.h"
 #include <sstream>
 #include <boost/circular_buffer.hpp>
 
@@ -110,9 +110,9 @@ namespace Algora
         virtual void dumpData(std::ostream &os) const override;
 
     private:
-        typedef boost::circular_buffer<SESVertexData *> PriorityQueue;
+        typedef boost::circular_buffer<SESVertexDataMultipleParents<maxNTreeArcs> *> PriorityQueue;
 
-        FastPropertyMap<SESVertexData *> data;
+        FastPropertyMap<SESVertexDataMultipleParents<maxNTreeArcs> *> data;
         FastPropertyMap<bool> reachable;
         FastPropertyMap<unsigned int> timesInQueue;
         PriorityQueue queue;
@@ -139,17 +139,19 @@ namespace Algora
         profiling_counter rerunRequeued;
         profiling_counter rerunNumAffected;
 
-        void restoreTree(SESVertexData *rd);
+        void restoreTree(SESVertexDataMultipleParents<maxNTreeArcs> *rd);
         void cleanup(bool freeSpace);
         void dumpTree(std::ostream &os);
         bool checkTree();
         void rerun();
-        DiGraph::size_type process(SESVertexData *vd, bool &limitReached);
+        DiGraph::size_type process(SESVertexDataMultipleParents<maxNTreeArcs> *vd, bool &limitReached);
     };
 
     // explicit instantiation declaration
-    extern template class SimpleESTreeMultipleTreeArcs<false>;
-    extern template class SimpleESTreeMultipleTreeArcs<true>;
+    extern template class SimpleESTreeMultipleTreeArcs<false, 2>;
+    extern template class SimpleESTreeMultipleTreeArcs<true, 2>;
+    extern template class SimpleESTreeMultipleTreeArcs<false, 3>;
+    extern template class SimpleESTreeMultipleTreeArcs<true, 3>;
 }
 
 #endif // SIMPLEESTREE_H

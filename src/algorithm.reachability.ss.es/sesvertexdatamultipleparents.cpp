@@ -20,17 +20,11 @@
  *   http://algora.xaikal.org
  */
 
-#ifndef ALGORADYN_INFO_H
-#define ALGORADYN_INFO_H
+#include "sesvertexdatamultipleparents.h"
+#include "graph/vertex.h"
+#include "graph/arc.h"
 
-namespace Algora {
+namespace Algora
+{
 
-struct AlgoraDynInfo {
-  static constexpr char GIT_REVISION[] = "000a09de84639f00096af4f87fea8d2f60de17df";
-  static constexpr char GIT_DATE[] = "2025-05-07T12:20:41+02:00";
-  static constexpr char GIT_TIMESTAMP[] = "1746613241";
-};
 }
-
-#endif
-
