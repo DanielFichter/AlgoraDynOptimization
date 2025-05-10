@@ -21,14 +21,15 @@
  */
 
 #include "simpleestree_multipletreearcs.h"
+#include "graph/vertex.h"
+#include "graph/arc.h"
+#include "algorithm.basic.traversal/breadthfirstsearch.h"
+#include "algorithm.basic.traversal/graphtraversal.h"
+#include "algorithm/digraphalgorithmexception.h"
 
 #include <vector>
 #include <climits>
 #include <cassert>
-
-#include "graph/vertex.h"
-#include "algorithm.basic.traversal/breadthfirstsearch.h"
-#include "algorithm/digraphalgorithmexception.h"
 
 // #define DEBUG_SIMPLEESTREE
 
@@ -148,41 +149,51 @@ namespace Algora
             data[root]->reset({}, {}, 0);
         }
         reachable[root] = true;
-        // TODO: use on ArcDiscovered and add tree arc if it has the same level as the existing once
-        // maybe call data.resetAll first
-        bfs.onTreeArcDiscover([this](Arc *a)
+
+        bfs.onArcDiscover([this](const Arc *a)
+                          {
+#ifdef COLLECT_PR_DATA
+                              prVertexConsidered();
+                              prArcConsidered();
+#endif
+                              Arc* mutableA = const_cast<Arc*>(a);
+                              Vertex *t;
+                              Vertex *h;
+                              if (reverseArcDirection)
                               {
-#ifdef COLLECT_PR_DATA
-                                  prVertexConsidered();
-                                  prArcConsidered();
-#endif
-                                  Vertex *t;
-                                  Vertex *h;
-                                  if (reverseArcDirection)
+                                  t = a->getHead();
+                                  h = a->getTail();
+                              }
+                              else
+                              {
+                                  t = a->getTail();
+                                  h = a->getHead();
+                              }
+                              auto* hd = data[h];
+                              auto* td = data[t]; 
+
+                              if (hd == nullptr)
+                              {
+                                  data[h] = new SESVertexDataMultipleParents<maxNTreeArcs>(h, std::array<SESVertexDataMultipleParents<maxNTreeArcs>*, maxNTreeArcs>{td},
+                                     std::array<Arc*, maxNTreeArcs>{mutableA});
+                              }
+                              else
+                              {
+                                  if (td->level + 1 == hd->level)
                                   {
-                                      t = a->getHead();
-                                      h = a->getTail();
+                                      hd->tryAddParent(td, mutableA);
                                   }
                                   else
                                   {
-                                      t = a->getTail();
-                                      h = a->getHead();
+                                      hd->reset(std::array<SESVertexDataMultipleParents<maxNTreeArcs>*, maxNTreeArcs>{td}, std::array<Arc*, maxNTreeArcs>{mutableA});
                                   }
-                                  if (data[h] == nullptr)
-                                  {
-                                      data[h] = new SESVertexDataMultipleParents<maxNTreeArcs>(h, {data(t)}, {a});
-                                  }
-                                  else
-                                  {
-                                      // TODO: if level(t) + 1 == level(h), try to add parent
-                                      data[h]->reset({data(t)}, {a});
-                                  }
-                                  reachable[h] = true;
-                                  PRINT_DEBUG("(" << a->getTail() << ", " << a->getHead() << ")" << " is a tree arc.")
+                              }
+                              reachable[h] = true;
+                              PRINT_DEBUG("(" << a->getTail() << ", " << a->getHead() << ")" << " is a tree arc.")
 #ifdef COLLECT_PR_DATA
-                                  prArcConsidered();
+                              prArcConsidered();
 #endif
-                              });
+                              return true; });
         runAlgorithm(bfs, diGraph);
 
         diGraph->mapVertices([this](Vertex *v)

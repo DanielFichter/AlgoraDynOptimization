@@ -124,7 +124,6 @@ namespace Algora
             return existingTreeArcs;
         }
 
-
         void setUnreachable()
         {
             parents = {};
@@ -234,14 +233,14 @@ namespace Algora
         level_type level;
     };
 
-    template<unsigned maxNParents = 2>
-    struct SES_Priority
+    /* struct SES_Priority
     {
+        template<unsigned maxNParents = 2>
         typename SESVertexDataMultipleParents<maxNParents>::level_type operator()(const SESVertexDataMultipleParents<maxNParents> *vd)
         {
             return vd->getLevel();
         }
-    };
+    }; */
 
 }
 
