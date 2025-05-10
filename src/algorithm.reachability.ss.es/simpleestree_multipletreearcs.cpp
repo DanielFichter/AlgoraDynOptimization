@@ -181,6 +181,7 @@ namespace Algora
                               {
                                   if (td->hasAnyParent())
                                   {
+                                      //TODO: if multiarcs are possible, check if td is already a parent of hd
                                       hd->tryAddParent(td, mutableA);
                                   }
                                   else
@@ -370,11 +371,7 @@ namespace Algora
 
         // update...
 
-        /*
-         * TODO: if hd->level == td->level + 1, try to add new parent td
-         * if td->level + 1 < hd->level, replace parents
-         */
-        if (hd->level <= td->level + 1)
+        if (hd->level < td->level + 1)
         {
             // arc does not change anything
 #ifdef COLLECT_PR_DATA
@@ -382,6 +379,10 @@ namespace Algora
 #endif
             PRINT_DEBUG("Not a tree arc.")
             return;
+        }
+        if (hd->level == td->level + 1)
+        {
+            td->tryAddParent(hd, a);
         }
         else
         {
@@ -433,9 +434,7 @@ namespace Algora
 #ifdef COLLECT_PR_DATA
          prVertexConsidered();
 #endif
-         // TODO: if atd->level + 1 == ahd-> level and atd != data(ahd)->getParentsData(), add parent
-         // if atd->level + 1 < ahd->level, replace parents
-         if (!ahd->isReachable() ||  atd->level + 1 < ahd->level) {
+         if (!ahd->isReachable() || atd->level + 1 < ahd->level) {
 #ifdef COLLECT_PR_DATA
              movesUp++;
              auto newLevel = atd->level + 1;
@@ -452,7 +451,13 @@ namespace Algora
              reachable[ah] = true;
              PRINT_DEBUG( "(" << a->getTail() << ", " << a->getHead() << ")" << " is a new tree arc.");
              return true;
-         } else {
+         }
+         else if (atd->level + 1 == ahd->level && !ahd->isParent(atd)) 
+         {
+            ahd->tryAddParent(atd, const_cast<Arc*>(a));
+         }
+         else
+         {
              PRINT_DEBUG( "(" << a->getTail() << ", " << a->getHead() << ")" << " is a non-tree arc.")
          }
          return false; });
