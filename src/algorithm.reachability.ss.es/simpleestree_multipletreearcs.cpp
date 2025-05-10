@@ -179,7 +179,7 @@ namespace Algora
                               }
                               else
                               {
-                                  if (td->level + 1 == hd->level)
+                                  if (td->hasAnyParent())
                                   {
                                       hd->tryAddParent(td, mutableA);
                                   }

@@ -208,6 +208,11 @@ namespace Algora
             return parentVertices;
         }
 
+        bool hasAnyParent() const
+        {
+            return nParents;
+        }
+
     //private:
         bool isValidParent(SESVertexDataMultipleParents<maxNParents> *p) const
         {
