@@ -517,6 +517,7 @@ namespace Algora
         PRINT_DEBUG("Stored data of head: " << data(a->getHead()));
 
         auto hd = data(head);
+        
         if (hd == nullptr)
         {
             if (reverseArcDirection)
@@ -546,9 +547,10 @@ namespace Algora
             return;
         }
 
-        if (hd->isOnlyTreeArc(a))
+        auto tail = reverseArcDirection ? a->getHead() : a->getTail();
+        auto td = data(tail);
+        if (hd->tryRemoveParent(td) && !hd->hasAnyParent())
         {
-            hd->reset({}, {}, hd->getLevel());
             restoreTree(hd);
         }
         else

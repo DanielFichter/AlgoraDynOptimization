@@ -213,6 +213,31 @@ namespace Algora
             return nParents;
         }
 
+        bool tryRemoveParent(SESVertexDataMultipleParents<maxNParents> *p)
+        {
+            bool deleted = false;
+            for (unsigned parentIndex = 0; parentIndex < nParents; parentIndex++)
+            {
+                const auto* currentParent = parents[parentIndex];
+                if (currentParent == p)
+                {
+                    deleted = true;
+                }
+                if (deleted)
+                {
+                    parents[parentIndex] = parents[parentIndex + 1];
+                    treeArcs[parentIndex] = treeArcs[parentIndex + 1];
+                }
+            }
+
+            if (deleted)
+            {
+                nParents--;
+            }
+
+            return deleted;
+        }
+
     //private:
         bool isValidParent(SESVertexDataMultipleParents<maxNParents> *p) const
         {
