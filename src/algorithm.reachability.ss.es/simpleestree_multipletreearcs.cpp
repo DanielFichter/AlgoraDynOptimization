@@ -26,6 +26,7 @@
 #include "algorithm.basic.traversal/breadthfirstsearch.h"
 #include "algorithm.basic.traversal/graphtraversal.h"
 #include "algorithm/digraphalgorithmexception.h"
+#include "io/printvector.h"
 
 #include <vector>
 #include <climits>
@@ -517,7 +518,7 @@ namespace Algora
         PRINT_DEBUG("Stored data of head: " << data(a->getHead()));
 
         auto hd = data(head);
-        
+
         if (hd == nullptr)
         {
             if (reverseArcDirection)
@@ -747,13 +748,9 @@ namespace Algora
         PRINT_DEBUG("Processing vertex " << vd << ".");
         Vertex *v = vd->getVertex();
 
-        // TODO: consider all existing parents
-        auto oldParent = vd->getParentsData()[0];
-
-        // TODO: is it possible that only some of the parents are invalid?
         if (vd->discardInvalidParents())
         {
-            PRINT_DEBUG("Parent still valid. No further processing required.");
+            PRINT_DEBUG("Node still has valid parents. No further processing required.");
             return 0U;
         }
         else if (!vd->isReachable())
@@ -762,19 +759,20 @@ namespace Algora
             return 0U;
         }
 
-        // TODO: save number of existing parents in a variable
-        // TODO: make "parent" an array
-        // pick the parents with the lowest level, as parents can have different levels at this point!
-        auto parent = oldParent;
+        // Note that parents can have different level at this point
+        vd->discardHigherLevelParents();
+
+        auto oldParents = vd->getExistingParents();
+
+        auto parents = oldParents;
         auto oldVLevel = vd->level;
         // TODO: Why do we need to check for null here? We already know that the parent is valid.
-        auto minParentLevel = parent == nullptr ? SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE : parent->level;
-        // TODO: make "treeArc" an array
-        auto treeArc = vd->getTreeArc(0);
+        auto minParentLevel = parents.empty() ? SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE : parents[0]->level;
+        auto treeArcs = vd->getExistingTreeArcs();
 
         PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
 
-        auto findParent = [this, &parent, &minParentLevel, &oldVLevel, &treeArc](Arc *a)
+        auto findParent = [this, &parents, &minParentLevel, &oldVLevel, &treeArcs](Arc *a)
         {
 #ifdef COLLECT_PR_DATA
             prArcConsidered();
@@ -784,43 +782,40 @@ namespace Algora
                 PRINT_DEBUG("Loop ignored.");
                 return;
             }
-            // TODO: use the whole array
             auto pd = data(reverseArcDirection ? a->getHead() : a->getTail());
 #ifdef COLLECT_PR_DATA
             prVertexConsidered();
 #endif
             auto pLevel = pd->level;
-            if (pLevel < minParentLevel)
+            if (pLevel == minParentLevel)
+            {
+                parents.push_back(pd);
+                treeArcs.push_back(a);
+            }
+            else if (pLevel < minParentLevel)
             {
                 minParentLevel = pLevel;
 
-                // TODO: reset arrays and set new value
-                parent = pd;
-                treeArc = a;
+                parents = {pd};
+                treeArcs = {a};
                 PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
                                                                << ", parent " << parent);
                 assert(minParentLevel + 1 >= oldVLevel);
             }
         };
-        auto abortReparenting = [&oldVLevel, &minParentLevel](const Arc *)
-        {
-            return minParentLevel + 1 == oldVLevel;
-        };
-
         if (reverseArcDirection)
         {
-            diGraph->mapOutgoingArcsUntil(v, findParent, abortReparenting);
+            diGraph->mapOutgoingArcs(v, findParent);
         }
         else
         {
-            diGraph->mapIncomingArcsUntil(v, findParent, abortReparenting);
+            diGraph->mapIncomingArcs(v, findParent);
         }
 
         DiGraph::size_type levelDiff = 0U;
         auto n = diGraph->getSize();
 
-        // TODO: check if nParents == 0 instead of parent == nullptr
-        if ((parent == nullptr || minParentLevel >= n - 1) && vd->isReachable())
+        if ((parents.empty() || minParentLevel >= n - 1) && vd->isReachable())
         {
             vd->setUnreachable();
             reachable.resetToDefault(v);
@@ -829,16 +824,21 @@ namespace Algora
                         << levelDiff);
         }
 
-        // TODO: use arrays
-        else if (parent != oldParent || oldVLevel <= minParentLevel)
+        else if (parents != oldParents || oldVLevel <= minParentLevel)
         {
-            assert(parent->isReachable());
+            assert(std::all_of(parents.begin(), parents.end(), [](const auto *parent)
+                               { return parent == nullptr || parent->isReachable(); }));
             assert(minParentLevel != SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE);
-            // TODO: use arrays
-            vd->replaceParents(parent, treeArc);
+
+            std::array<SESVertexDataMultipleParents<maxNTreeArcs> *, maxNTreeArcs> parentArray{};
+            std::array<Arc *, maxNTreeArcs> treeArcArray{};
+            std::copy(treeArcs.begin(), treeArcs.end(), treeArcArray.begin());
+            std::copy(parents.begin(), parents.end(), parentArray.begin());
+            vd->reset(parentArray, treeArcArray, minParentLevel);
+
             assert(vd->level >= oldVLevel);
             levelDiff = vd->level - oldVLevel;
-            PRINT_DEBUG("Parent has changed, new parent is " << parent);
+            PRINT_DEBUG("Parents have changed, new parents are " << parents);
         }
 
         if (levelDiff > 0U)
