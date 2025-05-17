@@ -734,6 +734,7 @@ namespace Algora
                     PRINT_DEBUG("Update: Min parent level now is " << minParentLevel);
                     assert(minParentLevel + 1 >= oldVLevel);
                 }
+                sampler.provide({a, pd});
 
                 PRINT_DEBUG("Vertex " << pd << " considered as potential parent");
             }
