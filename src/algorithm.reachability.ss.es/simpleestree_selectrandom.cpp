@@ -645,49 +645,48 @@ DiGraph::size_type SimpleESTreeSelectRandom<reverseArcDirection>::process(SESVer
 
     PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
 
-    // difference to usual simple es tree
-    {
-        auto findParent = [this, &minParentLevel, &oldVLevel] (Arc *a) {
+    // --- begin difference to regular simple es tree ---
+    
+    auto findParent = [this, &minParentLevel, &oldVLevel] (Arc *a) {
 #ifdef COLLECT_PR_DATA
-                prArcConsidered();
+            prArcConsidered();
 #endif
-            if (a->isLoop()) {
-                PRINT_DEBUG( "Loop ignored.");
-                return;
-            }
-            auto pd = data(reverseArcDirection ? a->getHead() : a->getTail());
+        if (a->isLoop()) {
+            PRINT_DEBUG( "Loop ignored.");
+            return;
+        }
+        auto pd = data(reverseArcDirection ? a->getHead() : a->getTail());
 #ifdef COLLECT_PR_DATA
-                prVertexConsidered();
+            prVertexConsidered();
 #endif
-            auto pLevel = pd->level;
-            if (pLevel <= minParentLevel) {
-                if (pLevel != minParentLevel)
-                {
-                    potentialTreeArcs.clear();
-                    minParentLevel = pLevel;
-                }
-                potentialTreeArcs.insert(a);
-
-                PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
-                    << ", vertex " << parent << " added to potential parent list");
+        auto pLevel = pd->level;
+        if (pLevel <= minParentLevel && pLevel < SESVertexData::UNREACHABLE) {
+            if (pLevel != minParentLevel)
+            {
+                potentialTreeArcs.clear();
+                minParentLevel = pLevel;
+                PRINT_DEBUG("Update: Min parent level now is " << minParentLevel);
                 assert (minParentLevel + 1 >= oldVLevel);
             }
-        };
-
-        if (reverseArcDirection) {
-            diGraph->mapOutgoingArcs(v, findParent);
-        } else {
-            diGraph->mapIncomingArcs(v, findParent);
+            potentialTreeArcs.insert({a, pd});
+            PRINT_DEBUG("Vertex " << pd << " added to potential parent list");     
         }
+    };
 
-        if (!potentialTreeArcs.empty())
-        {
-            treeArc = selectRandomTreeArc(potentialTreeArcs);
-            parent = data(reverseArcDirection ? treeArc->getHead() : treeArc->getTail());
-            potentialTreeArcs.clear();
-        }
+    if (reverseArcDirection) {
+        diGraph->mapOutgoingArcs(v, findParent);
+    } else {
+        diGraph->mapIncomingArcs(v, findParent);
     }
+
+    if (!potentialTreeArcs.empty())
+    {
+        std::tie(treeArc, parent) = selectRandomTreeArc(potentialTreeArcs);
+        //parent = data(reverseArcDirection ? treeArc->getHead() : treeArc->getTail());
+        potentialTreeArcs.clear();
+    }    
     
+    // --- end difference to regular simple es tree ---
 
     DiGraph::size_type levelDiff = 0U;
     auto n = diGraph->getSize();
@@ -840,7 +839,7 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::cleanup(bool freeSpace)
 }
 
 template<bool reverseArcDirection>
-Arc* SimpleESTreeSelectRandom<reverseArcDirection>::selectRandomTreeArc(const ArcPool& potentialTreeArcs)
+std::pair<Arc*, SESVertexData*> SimpleESTreeSelectRandom<reverseArcDirection>::selectRandomTreeArc(const ArcPool& potentialTreeArcs)
 {
     const size_t arcIndex = generateRandomNumber() % potentialTreeArcs.size();
     return potentialTreeArcs.at(arcIndex);

@@ -29,6 +29,7 @@
 #include "sesvertexdata.h"
 #include <sstream>
 #include <random>
+#include <utility>
 #include <boost/circular_buffer.hpp>
 
 namespace Algora {
@@ -36,20 +37,21 @@ namespace Algora {
 class ArcPool
 {
 public:
-    void insert(Arc* arc)
+    void insert(std::pair<Arc*, SESVertexData*> arc)
     {
-        if (arraySize < nArcs + 1)
+        if (arraySize == nArcs)
         {
             arraySize *= 2;
-            Arc** newData = new Arc*[arraySize];
+            std::pair<Arc*, SESVertexData*>* newData = new std::pair<Arc*, SESVertexData*>[arraySize];
             for (size_t arcIndex = 0; arcIndex < nArcs; arcIndex++)
             {
                 newData[arcIndex] = data[arcIndex];
             }
-            delete data;
+            delete[] data;
             data = newData;
         }
-        data[++nArcs] = arc;
+        data[nArcs] = arc;
+        nArcs++;
     }
 
     void clear()
@@ -59,7 +61,7 @@ public:
 
     ~ArcPool()
     {
-        delete data;
+        delete[] data;
     }
 
     bool empty() const
@@ -72,22 +74,17 @@ public:
         return nArcs;
     }
 
-    Arc* at (size_t index) const
+    const std::pair<Arc*, SESVertexData*>& at(size_t index) const
     {
         return data[index];
     }
 
 private:
-    Arc** data = new Arc*[5];
+    std::pair<Arc*, SESVertexData*>* data = new std::pair<Arc*, SESVertexData*>[5]{};
     size_t nArcs = 0;
     size_t arraySize = 5;
 };
 
-enum class ParentSelectStrategy
-{
-    firstOptimal,
-    randomOptimal
-};
 
 /*
  * The same as SimpleESTree with the difference that, if the parent of a node in the bfs tree
@@ -193,7 +190,7 @@ private:
     std::subtract_with_carry_engine<std::vector<Algora::Arc*>::size_type, 48, 5, 12> generateRandomNumber;
 
     void restoreTree(SESVertexData *rd);
-    Algora::Arc* selectRandomTreeArc(const ArcPool& potentialTreeArcs);
+    std::pair<Algora::Arc*, SESVertexData*> selectRandomTreeArc(const ArcPool& potentialTreeArcs);
     void cleanup(bool freeSpace);
     void dumpTree(std::ostream &os);
     bool checkTree();
