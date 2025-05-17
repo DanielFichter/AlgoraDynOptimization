@@ -769,7 +769,7 @@ namespace Algora
         auto [parents, nParents] = std::tie(oldParents, nOldParents);
         auto oldVLevel = vd->level;
         // TODO: Why do we need to check for null here? We already know that the parent is valid.
-        auto minParentLevel = parents.empty() ? SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE : parents[0]->level;
+        auto minParentLevel = nParents == 0 ? SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE : parents[0]->level;
         auto [treeArcs, nTreeArcs] = vd->getExistingTreeArcs();
 
         PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
