@@ -182,8 +182,10 @@ namespace Algora
                               {
                                   if (td->hasAnyParent())
                                   {
-                                      //TODO: if multiarcs are possible, check if td is already a parent of hd
-                                      hd->tryAddParent(td, mutableA);
+                                      if (td->level == hd->getParentData(0)->level && !hd->isParent(td))
+                                      {
+                                        hd->tryAddParent(td, mutableA);
+                                      }
                                   }
                                   else
                                   {
@@ -638,7 +640,7 @@ namespace Algora
             os << "Tree in dot format:\ndigraph SESTree {\n";
             for (const auto vd : data)
             {
-                const auto treeArcs = vd->getExistingTreeArcs();
+                const auto [treeArcs, nTreeArcs] = vd->getExistingTreeArcs();
                 for (const auto *treeArc : treeArcs)
                 {
                     os << treeArc->getTail()->getName() << " -> "
@@ -661,7 +663,7 @@ namespace Algora
             diGraph->mapVertices([&](Vertex *v)
                                  {
                 auto vd = data[v];
-                const auto treeArcs = vd->getExistingTreeArcs();
+                const auto [treeArcs, nTreeArcs] = vd->getExistingTreeArcs();
 
                 os << v << ": L " << vd->level << ", A [";
                 bool first = true;
@@ -762,17 +764,17 @@ namespace Algora
         // Note that parents can have different level at this point
         vd->discardHigherLevelParents();
 
-        auto oldParents = vd->getExistingParents();
+        auto [oldParents, nOldParents] = vd->getExistingParents();
 
-        auto parents = oldParents;
+        auto [parents, nParents] = std::tie(oldParents, nOldParents);
         auto oldVLevel = vd->level;
         // TODO: Why do we need to check for null here? We already know that the parent is valid.
         auto minParentLevel = parents.empty() ? SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE : parents[0]->level;
-        auto treeArcs = vd->getExistingTreeArcs();
+        auto [treeArcs, nTreeArcs] = vd->getExistingTreeArcs();
 
         PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
 
-        auto findParent = [this, &parents, &minParentLevel, &oldVLevel, &treeArcs](Arc *a)
+        auto findParent = [this, &parents, &nParents, &minParentLevel, &oldVLevel, &treeArcs, &nTreeArcs](Arc *a)
         {
 #ifdef COLLECT_PR_DATA
             prArcConsidered();
@@ -789,15 +791,15 @@ namespace Algora
             auto pLevel = pd->level;
             if (pLevel == minParentLevel)
             {
-                parents.push_back(pd);
-                treeArcs.push_back(a);
+                parents[nParents++] = pd;
+                treeArcs[nTreeArcs++] = a;
             }
             else if (pLevel < minParentLevel)
             {
                 minParentLevel = pLevel;
 
-                parents = {pd};
-                treeArcs = {a};
+                std::tie(parents, nParents) = std::make_pair(std::array<SESVertexDataMultipleParents<maxNTreeArcs>*, maxNTreeArcs>{pd}, 1);
+                std::tie(treeArcs, nTreeArcs) = std::make_pair(std::array<Arc*, maxNTreeArcs>{a}, 1);
                 PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
                                                                << ", parent " << parent);
                 assert(minParentLevel + 1 >= oldVLevel);
@@ -830,11 +832,7 @@ namespace Algora
                                { return parent == nullptr || parent->isReachable(); }));
             assert(minParentLevel != SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE);
 
-            std::array<SESVertexDataMultipleParents<maxNTreeArcs> *, maxNTreeArcs> parentArray{};
-            std::array<Arc *, maxNTreeArcs> treeArcArray{};
-            std::copy(treeArcs.begin(), treeArcs.end(), treeArcArray.begin());
-            std::copy(parents.begin(), parents.end(), parentArray.begin());
-            vd->reset(parentArray, treeArcArray, minParentLevel);
+            vd->reset(parents, treeArcs, minParentLevel);
 
             assert(vd->level >= oldVLevel);
             levelDiff = vd->level - oldVLevel;

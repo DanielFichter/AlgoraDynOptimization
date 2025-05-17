@@ -116,18 +116,18 @@ namespace Algora
         const std::array<SESVertexDataMultipleParents<maxNParents> *, maxNParents> &getParentsData() const { return parents; }
         Arc *getTreeArc(size_t index) const { return treeArcs[index]; }
 
-        std::vector<Arc *> getExistingTreeArcs() const
+        std::pair<std::array<Arc*, maxNParents>, size_t> getExistingTreeArcs() const
         {
-            std::vector<Arc *> existingTreeArcs;
-            std::copy(treeArcs.begin(), treeArcs.begin() + nParents, std::back_inserter(existingTreeArcs));
-            return existingTreeArcs;
+            std::array<Arc *, maxNParents> existingTreeArcs;
+            std::copy(treeArcs.begin(), treeArcs.begin() + nParents, existingTreeArcs.begin());
+            return {existingTreeArcs, nParents};
         }
 
-        std::vector<SESVertexDataMultipleParents<maxNParents> *> getExistingParents() const
+        std::pair<std::array<SESVertexDataMultipleParents<maxNParents> *, maxNParents>, size_t> getExistingParents() const
         {
-            std::vector<SESVertexDataMultipleParents<maxNParents> *> existingParents;
-            std::copy(parents.begin(), parents.begin() + nParents, std::back_inserter(existingParents));
-            return existingParents;
+            std::array<SESVertexDataMultipleParents<maxNParents> *, maxNParents> existingParents{};
+            std::copy(parents.begin(), parents.begin() + nParents, existingParents.begin());
+            return {existingParents, nParents};
         }
 
         void discardHigherLevelParents()
@@ -238,6 +238,12 @@ namespace Algora
             std::transform(parents.begin(), parents.end(), parentVertices.begin(), [](const auto *parentData)
                            { return parentData ? parentData->vertex : nullptr; });
             return parentVertices;
+        }
+
+        SESVertexDataMultipleParents<maxNParents>* getParentData(size_t index)
+        {
+            assert(parents[index]);
+            return parents[index];
         }
 
         bool hasAnyParent() const
