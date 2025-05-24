@@ -386,7 +386,7 @@ namespace Algora
         if (hd->level == td->level + 1)
         {
             PRINT_DEBUG("Is a new tree arc.")
-            td->tryAddParent(hd, a);
+            hd->tryAddParent(td, a);
         }
         else
         {
@@ -643,10 +643,11 @@ namespace Algora
             for (const auto vd : data)
             {
                 const auto [treeArcs, nTreeArcs] = vd->getExistingTreeArcs();
-                for (const auto *treeArc : treeArcs)
+                for (size_t treeArcIndex = 0; treeArcIndex < nTreeArcs; treeArcIndex++)
                 {
-                    os << treeArc->getTail()->getName() << " -> "
-                       << treeArc->getHead()->getName() << ";\n";
+                    const auto *currentTreeArc = treeArcs[treeArcIndex];
+                    os << currentTreeArc->getTail()->getName() << " -> "
+                       << currentTreeArc->getHead()->getName() << ";\n";
                 }
             }
             os << "}" << std::endl;
@@ -669,22 +670,9 @@ namespace Algora
 
                 os << v << ": L " << vd->level << ", A [";
                 bool first = true;
-                for (const auto* treeArc: treeArcs)
+                for (size_t treeArcIndex = 0; treeArcIndex < nTreeArcs; treeArcIndex++)
                 {
-                        if (first)
-                        {
-                            first = false;
-                        }
-                        else
-                        {
-                            os << ", ";
-                        }
-                        os << treeArc;
-                }
-                os << "], P [";
-                first = true;
-                for (const auto* parent: vd->getParents())
-                {
+                    const auto* currentTreeArc = treeArcs[treeArcIndex];
                     if (first)
                     {
                         first = false;
@@ -693,7 +681,24 @@ namespace Algora
                     {
                         os << ", ";
                     }
-                    os << parent;
+                    os << currentTreeArc;
+                }
+                os << "], P [";
+                first = true;
+
+                const auto& parents = vd->getParents();
+                for (size_t parentIndex = 0; parentIndex < nTreeArcs; parentIndex++)
+                {
+                    const auto* currentParent = parents[parentIndex];
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        os << ", ";
+                    }
+                    os << currentParent;
                 }
                 os << "]\n"; });
         }
@@ -771,11 +776,11 @@ namespace Algora
         auto [parents, nParents] = std::tie(oldParents, nOldParents);
         auto oldVLevel = vd->level;
         auto minParentLevel = nParents == 0 ? SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE : parents[0]->level;
-        auto [treeArcs, nTreeArcs] = vd->getExistingTreeArcs();
+        auto treeArcs = vd->getExistingTreeArcs().first;
 
         PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
 
-        auto findParent = [this, &parents, &nParents, &minParentLevel, &oldVLevel, &treeArcs, &nTreeArcs](Arc *a)
+        auto findParent = [this, &parents, &nParents, &minParentLevel, &oldVLevel, &treeArcs](Arc *a)
         {
 #ifdef COLLECT_PR_DATA
             prArcConsidered();
@@ -790,12 +795,14 @@ namespace Algora
             prVertexConsidered();
 #endif
             auto pLevel = pd->level;
+            // TODO: check if parent level is unreachable!
             if (pLevel == minParentLevel)
             {
                 if (nParents < maxNTreeArcs)
                 {
-                    parents[nParents++] = pd;
-                    treeArcs[nTreeArcs++] = a;
+                    parents[nParents] = pd;
+                    treeArcs[nParents] = a;
+                    nParents++;
                 }
             }
             else if (pLevel < minParentLevel)
@@ -803,7 +810,7 @@ namespace Algora
                 minParentLevel = pLevel;
 
                 std::tie(parents, nParents) = std::make_pair(std::array<SESVertexDataMultipleParents<maxNTreeArcs> *, maxNTreeArcs>{pd}, 1);
-                std::tie(treeArcs, nTreeArcs) = std::make_pair(std::array<Arc *, maxNTreeArcs>{a}, 1);
+                treeArcs = {a};
                 PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
                                                                << ", parent " << parent);
                 assert(minParentLevel + 1 >= oldVLevel);
@@ -833,11 +840,13 @@ namespace Algora
         else if (parents != oldParents || oldVLevel <= minParentLevel)
         {
             assert(std::all_of(parents.begin(), parents.begin() + nParents, [](const auto *parent)
-                               { return parent == nullptr || parent->isReachable(); }));
+                               { return parent->isReachable(); }));
             assert(minParentLevel != SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE);
 
-            vd->reset(parents, treeArcs, minParentLevel + 1);
+            vd->reset(parents, treeArcs);
 
+            assert(vd->level == minParentLevel + 1);
+            assert(vd->getExistingParents().second == nParents);
             assert(vd->level >= oldVLevel);
             levelDiff = vd->level - oldVLevel;
             PRINT_DEBUG("Parents have changed, new parents are " << parents);
@@ -860,6 +869,7 @@ namespace Algora
 #ifdef COLLECT_PR_DATA
                 prVertexConsidered();
 #endif
+                // TODO: if is lowest level treearc, I think
                 if (hd->isTreeArc(a))
                 {
                     if (timesInQueue[head] < requeueLimit)

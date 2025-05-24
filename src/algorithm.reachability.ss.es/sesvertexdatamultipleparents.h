@@ -50,16 +50,19 @@ namespace Algora
             os << vd->vertex << ": ";
             // os << "parent: [" << vd->parent << "] ; level: " << vd->level;
             os << "parents: [";
-            for (const auto *parent : vd->parents)
+            for (size_t parentIndex = 0; parentIndex < vd->nParents; parentIndex++)
             {
-                if (parent)
+                const auto* currentParent = vd->parents[parentIndex];
+                if (currentParent)
                 {
-                    os << "{" << parent->vertex << ", tree arcs: [";
-                    for (const auto *treeArc : parent->treeArcs)
+                    os << "{" << currentParent->vertex << ", tree arcs: [";
+                    const auto& parentNTreeArcs = currentParent->nParents;
+                    for (size_t treeArcIndex = 0; treeArcIndex < parentNTreeArcs; treeArcIndex++)
                     {
-                        os << treeArc << " ";
+                        const auto& currentTreeArc = currentParent->treeArcs[treeArcIndex];
+                        os << currentTreeArc << " ";
                     }
-                    os << "], level: " << parent->level << "}";
+                    os << "], level: " << currentParent->level << "}";
                 }
                 else
                 {
@@ -91,7 +94,10 @@ namespace Algora
         {
             unsigned parentIndex = 0;
             for (; parentIndex < maxNParents && parents[parentIndex]; parentIndex++)
-                ;
+            {
+                assert(treeArcs[parentIndex]);
+            }
+
             return parentIndex;
         }
 
@@ -116,18 +122,14 @@ namespace Algora
         const std::array<SESVertexDataMultipleParents<maxNParents> *, maxNParents> &getParentsData() const { return parents; }
         Arc *getTreeArc(size_t index) const { return treeArcs[index]; }
 
-        std::pair<std::array<Arc*, maxNParents>, size_t> getExistingTreeArcs() const
+        std::pair<std::array<Arc *, maxNParents>, size_t> getExistingTreeArcs() const
         {
-            std::array<Arc *, maxNParents> existingTreeArcs;
-            std::copy(treeArcs.begin(), treeArcs.begin() + nParents, existingTreeArcs.begin());
-            return {existingTreeArcs, nParents};
+            return {treeArcs, nParents};
         }
 
         std::pair<std::array<SESVertexDataMultipleParents<maxNParents> *, maxNParents>, size_t> getExistingParents() const
         {
-            std::array<SESVertexDataMultipleParents<maxNParents> *, maxNParents> existingParents{};
-            std::copy(parents.begin(), parents.begin() + nParents, existingParents.begin());
-            return {existingParents, nParents};
+            return {parents, nParents};
         }
 
         void discardHigherLevelParents()
@@ -156,6 +158,7 @@ namespace Algora
             parents = lowestLevelParents;
             treeArcs = lowestLevelArcs;
             nParents = lowestLevelParentIndex;
+            assert(nParents <= maxNParents);
         }
 
         void setUnreachable()
@@ -179,6 +182,10 @@ namespace Algora
         // replace existing parents with new parent with lower level
         void replaceParents(SESVertexDataMultipleParents<maxNParents> *pd, Arc *a)
         {
+            for (size_t parentIndex = 1; parentIndex < nParents; parentIndex++)
+            {
+                parents[parentIndex] = nullptr;
+            }
             nParents = 1;
             parents[0] = pd;
             treeArcs[0] = a;
@@ -201,7 +208,7 @@ namespace Algora
             }
             return false;
         }
-
+        
         // returns wether there are valid parents left
         bool discardInvalidParents()
         {
@@ -223,6 +230,8 @@ namespace Algora
             treeArcs = validArcs;
             nParents = validParentIndex;
 
+            assert(nParents <= maxNParents);
+
             return nParents;
         }
 
@@ -240,7 +249,7 @@ namespace Algora
             return parentVertices;
         }
 
-        SESVertexDataMultipleParents<maxNParents>* getParentData(size_t index)
+        SESVertexDataMultipleParents<maxNParents> *getParentData(size_t index)
         {
             assert(parents[index]);
             return parents[index];
@@ -260,14 +269,28 @@ namespace Algora
                 if (currentParent == p)
                 {
                     deleted = true;
-                    nParents--;
                 }
                 if (deleted)
                 {
-                    parents[parentIndex] = parents[parentIndex + 1];
-                    treeArcs[parentIndex] = treeArcs[parentIndex + 1];
+                    if (parentIndex < nParents - 1)
+                    {
+                        parents[parentIndex] = parents[parentIndex + 1];
+                        treeArcs[parentIndex] = treeArcs[parentIndex + 1];
+                    }
+                    else
+                    {
+                        parents[parentIndex] = nullptr;
+                        treeArcs[parentIndex] = nullptr;
+                    }
                 }
             }
+
+            if (deleted)
+            {
+                nParents--;
+            }
+
+            assert(nParents <= maxNParents);
 
             return deleted;
         }
@@ -280,7 +303,7 @@ namespace Algora
 
         bool isTreeArc(const Arc *a)
         {
-            for (unsigned treeArcIndex = 0; treeArcIndex < nParents; treeArcIndex++)
+            for (size_t treeArcIndex = 0; treeArcIndex < nParents; treeArcIndex++)
             {
                 if (treeArcs[treeArcIndex] == a)
                 {
@@ -294,7 +317,7 @@ namespace Algora
         {
             assert(nParents);
             level_type lowestLevel;
-            for (unsigned parentIndex = 0; parentIndex < nParents; parentIndex++)
+            for (size_t parentIndex = 0; parentIndex < nParents; parentIndex++)
             {
                 const auto *currentParent = parents[parentIndex];
                 if (currentParent->level < lowestLevel)
@@ -307,7 +330,7 @@ namespace Algora
         }
 
         Vertex *vertex;
-        unsigned nParents;
+        size_t nParents;
         std::array<SESVertexDataMultipleParents<maxNParents> *, maxNParents> parents;
         std::array<Arc *, maxNParents> treeArcs;
         level_type level;
