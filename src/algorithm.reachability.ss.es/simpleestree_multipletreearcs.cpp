@@ -612,6 +612,9 @@ namespace Algora
         while (t != source)
         {
             auto *a = data(t)->getTreeArc(0);
+            std::cout << "t: " << data(t) << std::endl;
+            std::cout << "tree arc: " << a << std::endl;
+            std::cout << "nParents: " << data(t)->nParents << std::endl;
             path.push_back(a);
             t = reverseArcDirection ? a->getHead() : a->getTail();
         }
@@ -796,7 +799,7 @@ namespace Algora
 #endif
             auto pLevel = pd->level;
             // TODO: check if parent level is unreachable!
-            if (pLevel == minParentLevel)
+            if (pLevel == minParentLevel && pLevel != SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE)
             {
                 if (nParents < maxNTreeArcs)
                 {

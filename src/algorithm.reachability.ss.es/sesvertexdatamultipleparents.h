@@ -52,14 +52,14 @@ namespace Algora
             os << "parents: [";
             for (size_t parentIndex = 0; parentIndex < vd->nParents; parentIndex++)
             {
-                const auto* currentParent = vd->parents[parentIndex];
+                const auto *currentParent = vd->parents[parentIndex];
                 if (currentParent)
                 {
                     os << "{" << currentParent->vertex << ", tree arcs: [";
-                    const auto& parentNTreeArcs = currentParent->nParents;
+                    const auto &parentNTreeArcs = currentParent->nParents;
                     for (size_t treeArcIndex = 0; treeArcIndex < parentNTreeArcs; treeArcIndex++)
                     {
-                        const auto& currentTreeArc = currentParent->treeArcs[treeArcIndex];
+                        const auto &currentTreeArc = currentParent->treeArcs[treeArcIndex];
                         os << currentTreeArc << " ";
                     }
                     os << "], level: " << currentParent->level << "}";
@@ -88,6 +88,20 @@ namespace Algora
                 level = p[0]->level + 1;
             }
             nParents = calculateNParents();
+        }
+
+        void assertTreeArcs() const
+        {
+            /* assert(std::all_of(parents.begin(), parents.begin() + nParents, [](const SESVertexDataMultipleParents<maxNParents> *parent)
+                               { return parent; })); */
+
+            for (size_t parentIndex = 0; parentIndex < nParents; parentIndex++)
+            {
+                if (treeArcs[parentIndex] == nullptr)
+                {
+                    throw std::runtime_error(std::string("treeArc ") + std::to_string(parentIndex) + " is null!");
+                }
+            }
         }
 
         unsigned calculateNParents() const
@@ -159,13 +173,16 @@ namespace Algora
             treeArcs = lowestLevelArcs;
             nParents = lowestLevelParentIndex;
             assert(nParents <= maxNParents);
+            assertTreeArcs();
         }
 
         void setUnreachable()
         {
             parents = {};
             treeArcs = {};
+            nParents = 0;
             level = UNREACHABLE;
+            assertTreeArcs();
         }
 
         // add parent with same level as existing parents
@@ -177,6 +194,7 @@ namespace Algora
                 treeArcs[nParents] = a;
                 nParents++;
             }
+            assertTreeArcs();
         }
 
         // replace existing parents with new parent with lower level
@@ -190,6 +208,8 @@ namespace Algora
             parents[0] = pd;
             treeArcs[0] = a;
             level = pd->getLevel() + 1U;
+
+            assertTreeArcs();
         }
 
         bool isReachable() const
@@ -208,7 +228,7 @@ namespace Algora
             }
             return false;
         }
-        
+
         // returns wether there are valid parents left
         bool discardInvalidParents()
         {
@@ -231,7 +251,7 @@ namespace Algora
             nParents = validParentIndex;
 
             assert(nParents <= maxNParents);
-
+            assertTreeArcs();
             return nParents;
         }
 
@@ -291,6 +311,7 @@ namespace Algora
             }
 
             assert(nParents <= maxNParents);
+            assertTreeArcs();
 
             return deleted;
         }
@@ -316,7 +337,7 @@ namespace Algora
         level_type getLowestLevel() const
         {
             assert(nParents);
-            level_type lowestLevel;
+            level_type lowestLevel = 0;
             for (size_t parentIndex = 0; parentIndex < nParents; parentIndex++)
             {
                 const auto *currentParent = parents[parentIndex];
@@ -325,6 +346,8 @@ namespace Algora
                     lowestLevel = currentParent->level;
                 }
             }
+
+            assertTreeArcs();
 
             return lowestLevel;
         }
