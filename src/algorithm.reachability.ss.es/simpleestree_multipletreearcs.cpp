@@ -180,8 +180,9 @@ namespace Algora
                               }
                               else
                               {
-                                  if (td->hasAnyParent())
+                                  if (hd->hasAnyParent())
                                   {
+                                      // TODO: also consider that multiarcs can exist, i.e. the parent can be the same for multiple arcs
                                       if (td->level == hd->getParentData(0)->level && !hd->isParent(td))
                                       {
                                         hd->tryAddParent(td, mutableA);
