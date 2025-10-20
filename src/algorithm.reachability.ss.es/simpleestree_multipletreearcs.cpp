@@ -759,7 +759,7 @@ namespace Algora
 #endif
 
         PRINT_DEBUG("Processing vertex " << vd << ".");
-        Vertex *v = vd->getVertex();
+        const Vertex *v = vd->getVertex();
 
         if (vd->discardInvalidParents())
         {

@@ -78,6 +78,7 @@ namespace Algora
         typedef DiGraph::size_type level_type;
         static constexpr level_type UNREACHABLE = std::numeric_limits<level_type>::max();
 
+        // TODO: instead of always copying the array, it should be moved whenever possible
         SESVertexDataMultipleParents(Vertex *v, const std::array<SESVertexDataMultipleParents<maxNParents> *, maxNParents> &p = {}, const std::array<Arc *, maxNParents> &a = {},
                                      level_type l = UNREACHABLE)
             : vertex(v), parents(p), treeArcs(a), level(l)
@@ -250,6 +251,11 @@ namespace Algora
             treeArcs = validArcs;
             nParents = validParentIndex;
 
+            if (nParents == 0)
+            {
+                level = UNREACHABLE;
+            }
+
             assert(nParents <= maxNParents);
             assertTreeArcs();
             return nParents;
@@ -308,6 +314,10 @@ namespace Algora
             if (deleted)
             {
                 nParents--;
+                if (nParents == 0)
+                {
+                    level = UNREACHABLE;
+                }
             }
 
             assert(nParents <= maxNParents);
@@ -352,7 +362,7 @@ namespace Algora
             return lowestLevel;
         }
 
-        Vertex *vertex;
+        Vertex * const vertex;
         size_t nParents;
         std::array<SESVertexDataMultipleParents<maxNParents> *, maxNParents> parents;
         std::array<Arc *, maxNParents> treeArcs;
