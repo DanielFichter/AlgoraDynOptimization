@@ -235,7 +235,7 @@ namespace Algora
 
         IF_DEBUG(
             if (!checkTree()) {
-                std::cerr.flush();
+                std::cerr.flush();f
                 dumpTree(std::cerr);
                 std::cerr.flush();
             });

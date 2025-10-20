@@ -251,11 +251,6 @@ namespace Algora
             treeArcs = validArcs;
             nParents = validParentIndex;
 
-            if (nParents == 0)
-            {
-                level = UNREACHABLE;
-            }
-
             assert(nParents <= maxNParents);
             assertTreeArcs();
             return nParents;
@@ -314,10 +309,6 @@ namespace Algora
             if (deleted)
             {
                 nParents--;
-                if (nParents == 0)
-                {
-                    level = UNREACHABLE;
-                }
             }
 
             assert(nParents <= maxNParents);
