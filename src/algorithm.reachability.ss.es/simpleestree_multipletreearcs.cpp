@@ -796,7 +796,8 @@ namespace Algora
 
         auto [oldParents, nOldParents] = vd->getExistingParents();
 
-        auto [parents, nParents] = std::tie(oldParents, nOldParents);
+        auto parents = oldParents;
+        auto nParents = nOldParents;
         auto oldVLevel = vd->level;
         auto minParentLevel = nParents == 0 ? SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE : parents[0]->level;
         auto treeArcs = vd->getExistingTreeArcs().first;
