@@ -151,12 +151,13 @@ namespace Algora
         }
         reachable[root] = true;
 
-        bfs.onTreeArcDiscover([this](Arc *a)
+        bfs.onArcDiscover([this](const Arc *a)
                           {
 #ifdef COLLECT_PR_DATA
                               prVertexConsidered();
                               prArcConsidered();
 #endif
+                              Arc* mutableA = const_cast<Arc*>(a);
                               Vertex *t;
                               Vertex *h;
                               if (reverseArcDirection)
@@ -169,50 +170,30 @@ namespace Algora
                                   t = a->getTail();
                                   h = a->getHead();
                               }
-                              if (data(h) == nullptr)
+                              auto* hd = data[h];
+                              auto* td = data[t]; 
+
+                              if (hd == nullptr)
                               {
-                                  data[h] = new SESVertexDataMultipleParents<maxNTreeArcs>(h, std::array<SESVertexDataMultipleParents<maxNTreeArcs>*, maxNTreeArcs>{data(t)},
-                                     std::array<Arc*, maxNTreeArcs>{a});
+                                  data[h] = new SESVertexDataMultipleParents<maxNTreeArcs>(h, std::array<SESVertexDataMultipleParents<maxNTreeArcs>*, maxNTreeArcs>{td},
+                                     std::array<Arc*, maxNTreeArcs>{mutableA});
                               }
                               else
                               {
-                                  data[h]->reset(std::array<SESVertexDataMultipleParents<maxNTreeArcs>*, maxNTreeArcs>{data(t)}, std::array<Arc*, maxNTreeArcs>{a});
+                                  if (hd->hasAnyParent())
+                                  {
+                                      // TODO: also consider that multiarcs can exist, i.e. the parent can be the same for multiple arcs
+                                      if (td->level == hd->getParentData(0)->level && !hd->isParent(td))
+                                      {
+                                        hd->tryAddParent(td, mutableA);
+                                      }
+                                  }
+                                  else
+                                  {
+                                      hd->reset(std::array<SESVertexDataMultipleParents<maxNTreeArcs>*, maxNTreeArcs>{td}, std::array<Arc*, maxNTreeArcs>{mutableA});
+                                  }
                               }
                               reachable[h] = true;
-                              PRINT_DEBUG("(" << a->getTail() << ", " << a->getHead() << ")" << " is a tree arc.")
-#ifdef COLLECT_PR_DATA
-                              prArcConsidered();
-#endif
-                              return true; });
-
-
-        bfs.onNonTreeArcDiscover([this](Arc *a)
-                          {
-#ifdef COLLECT_PR_DATA
-                              prVertexConsidered();
-                              prArcConsidered();
-#endif
-                              Vertex *t;
-                              Vertex *h;
-                              if (reverseArcDirection)
-                              {
-                                  t = a->getHead();
-                                  h = a->getTail();
-                              }
-                              else
-                              {
-                                  t = a->getTail();
-                                  h = a->getHead();
-                              }
-                              assert(data(h));
-                              assert(data(h)->hasAnyParent());
-                              assert(reachable(h));
-                              assert(data(t)->level >= data(t)->getParentData(0)->level);
-                              // TODO: also consider that multiarcs can exist, i.e. the parent can be the same for multiple arcs
-                              if (data(t)->level == data(h)->getParentData(0)->level && !data(h)->isParent(data(t)))
-                              {
-                                data[h]->tryAddParent(data(t), a);
-                              }
                               PRINT_DEBUG("(" << a->getTail() << ", " << a->getHead() << ")" << " is a tree arc.")
 #ifdef COLLECT_PR_DATA
                               prArcConsidered();
@@ -225,7 +206,7 @@ namespace Algora
 #ifdef COLLECT_PR_DATA
          prVertexConsidered();
 #endif
-          if (data(v) == nullptr) {
+        if (data(v) == nullptr) {
             data[v] = new SESVertexDataMultipleParents<maxNTreeArcs>(v);
             PRINT_DEBUG( v << " is a unreachable.")
         } });
