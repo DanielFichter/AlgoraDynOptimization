@@ -49,6 +49,7 @@ public:
     void setMaxAffectedRatio(double ratio) {
         maxAffectedRatio = ratio;
     }
+    void setDyDiGraph(const DynamicDiGraph*);
 		DiGraph::size_type getDepthOfBFSTree() const;
 		DiGraph::size_type getNumReachable() const;
 
@@ -106,6 +107,7 @@ private:
     FastPropertyMap<bool> reachable;
     FastPropertyMap<unsigned int> timesInQueue;
     PriorityQueue queue;
+    const DynamicDiGraph * dyDiGraph;
 
     Vertex *root;
     bool initialized;

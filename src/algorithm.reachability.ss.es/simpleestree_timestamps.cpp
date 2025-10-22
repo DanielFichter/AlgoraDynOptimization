@@ -87,6 +87,12 @@ SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::~SimpleESTreeTimeSt
 }
 
 template<bool reverseArcDirection, bool preferOlderArc>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::setDyDiGraph(const DynamicDiGraph* newDyDiGraph)
+{
+    dyDiGraph = newDyDiGraph;
+}
+
+template<bool reverseArcDirection, bool preferOlderArc>
 DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::getDepthOfBFSTree() const
 {
 	DiGraph::size_type maxLevel = 0U;
