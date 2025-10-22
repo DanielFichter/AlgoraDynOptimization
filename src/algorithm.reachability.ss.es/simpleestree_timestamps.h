@@ -20,11 +20,10 @@
  *   http://algora.xaikal.org
  */
 
-#ifndef SIMPLEESTREE_H
-#define SIMPLEESTREE_H
+#ifndef SIMPLEESTREETIMESTAMPS_H
+#define SIMPLEESTREETIMESTAMPS_H
 
 #include "algorithm.reachability.ss/dynamicsinglesourcereachabilityalgorithm.h"
-#include "property/propertymap.h"
 #include "property/fastpropertymap.h"
 #include "sesvertexdata.h"
 #include <sstream>
@@ -146,4 +145,4 @@ extern template class SimpleESTreeTimeStamps<true, false>;
 extern template class SimpleESTreeTimeStamps<true, true>;
 }
 
-#endif // SIMPLEESTREE_H
+#endif // SIMPLEESTREETIMESTAMPS_H
