@@ -31,8 +31,9 @@
 #include <boost/circular_buffer.hpp>
 
 namespace Algora {
+class DynamicDiGraph;
 
-template<bool reverseArcDirection = false>
+template<bool reverseArcDirection = false, bool preferOlderArc = true>
 class SimpleESTreeTimeStamps : public DynamicSingleSourceReachabilityAlgorithm
 {
 public:
@@ -137,8 +138,10 @@ private:
 };
 
 // explicit instantiation declaration
-extern template class SimpleESTreeTimeStamps<false>;
-extern template class SimpleESTreeTimeStamps<true>;
+extern template class SimpleESTreeTimeStamps<false, false>;
+extern template class SimpleESTreeTimeStamps<false, true>;
+extern template class SimpleESTreeTimeStamps<true, false>;
+extern template class SimpleESTreeTimeStamps<true, true>;
 }
 
 #endif // SIMPLEESTREE_H
