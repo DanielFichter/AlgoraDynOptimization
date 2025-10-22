@@ -11,7 +11,9 @@ HEADERS += \
     $$PWD/simpleestree_multipletreearcs.h \
     $$PWD/sesvertexdatamultipleparents.h \
     $$PWD/reservoirsampler.h \
-    $$PWD/simpleestree_reservoirsampling.h
+    $$PWD/simpleestree_reservoirsampling.h \
+    $$PWD/simpleestree_timestamps.h \
+    $$PWD/sesvertexdata_timestamp.h \
 
 SOURCES += \
     $$PWD/estree-ml.cpp \
@@ -24,4 +26,5 @@ SOURCES += \
     $$PWD/simpleestree_multipletreearcs.cpp \
     $$PWD/sesvertexdatamultipleparents.cpp \
     $$PWD/reservoirsampler.cpp \
-    $$PWD/simpleestree_reservoirsampling.cpp
+    $$PWD/simpleestree_reservoirsampling.cpp \
+    $$PWD/simpleestree_timestamps.cpp \
