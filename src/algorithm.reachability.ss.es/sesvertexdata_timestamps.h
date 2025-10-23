@@ -28,6 +28,7 @@
 #include <iostream>
 #include <cassert>
 #include <limits>
+#include <algorithm>
 #include "graph/digraph.h"
 
 namespace Algora {
@@ -112,6 +113,13 @@ public:
         inArcInfos.push_back({pArc, birth});
     }
 
+    // TODO: solve this more efficiently, i.e. by maintaining the index to each arc.
+    // Note that this also requires a map
+    void removeArc(Arc* a) {
+        auto removeIt = std::remove_if(inArcInfos.begin(), inArcInfos.end(), [a] (const ArcInfo& ai) { return ai.pArc == a; });
+        inArcInfos.erase(removeIt);
+    }
+
 //private:
 
     struct ArcInfo
@@ -125,6 +133,7 @@ public:
     Vertex *vertex;
     SESVertexDataTimestamps *parent;
     Arc *treeArc;
+    DynamicTime parentBirth;
     level_type level;
 };
 

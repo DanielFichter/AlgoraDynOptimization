@@ -23,6 +23,7 @@
 #include "simpleestree_timestamps.h"
 #include "graph.dyn/dynamicdigraph.h"
 
+#include <cstddef>
 #include <vector>
 #include <climits>
 #include <cassert>
@@ -30,6 +31,7 @@
 #include "graph/vertex.h"
 #include "algorithm.basic.traversal/breadthfirstsearch.h"
 #include "algorithm/digraphalgorithmexception.h"
+#include "sesvertexdata_timestamps.h"
 
 //#define DEBUG_SIMPLEESTREE
 
@@ -164,11 +166,32 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::run()
             data[h]->reset(data(t), a);
         }
         reachable[h] = true;
+        data[h]->addArc(a, 0);
         PRINT_DEBUG( "(" << a->getTail() << ", " << a->getHead() << ")" << " is a tree arc.")
 #ifdef COLLECT_PR_DATA
         prArcConsidered();
 #endif
    });
+bfs.onNonTreeArcDiscover([this](Arc *a) {
+        if (a->isLoop()
+                || (!reverseArcDirection && a->getHead() == source)
+                || (reverseArcDirection && a->getTail() == source)) {
+            return;
+        }
+#ifdef COLLECT_PR_DATA
+        prArcConsidered();
+#endif
+        Vertex *h;
+        if (reverseArcDirection) {
+            h = a->getTail();
+        } else {
+            h = a->getHead();
+        }
+        SESVertexDataTimestamps *hd = data(h);
+        PRINT_DEBUG( a << " is a non-tree arc.")
+        hd->addArc(a, 0);
+   });
+
    runAlgorithm(bfs, diGraph);
 
    diGraph->mapVertices([this](Vertex *v) {
@@ -389,6 +412,7 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcAdd(Arc *
 #ifdef COLLECT_PR_DATA
         prVertexConsidered();
 #endif
+        // TODO: here one could substitute the arc with an arc that has the best birth
         if (!ahd->isReachable() ||  atd->level + 1 < ahd->level) {
 #ifdef COLLECT_PR_DATA
             movesUp++;
@@ -471,6 +495,8 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcRemove(Ar
         }
         throw std::logic_error("Should not happen");
     }
+
+    hd->removeArc(a);
 
     if (!hd->isReachable()) {
         if (reverseArcDirection) {
@@ -652,9 +678,11 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
     auto minParentLevel = parent == nullptr ? SESVertexDataTimestamps::UNREACHABLE : parent->level;
     auto treeArc = vd->treeArc;
 
+    SESVertexDataTimestamps::DynamicTime bestBirth = preferOlderArc ? dyDiGraph->getMaxTime() : 0;
+
     PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
 
-    auto findParent = [this,&parent,&minParentLevel,&oldVLevel,&treeArc](Arc *a) {
+    auto findParent = [this,&parent,&minParentLevel,&oldVLevel,&treeArc, &bestBirth](Arc* a, SESVertexDataTimestamps::DynamicTime birth) {
 #ifdef COLLECT_PR_DATA
             prArcConsidered();
 #endif
@@ -671,19 +699,22 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
             minParentLevel = pLevel;
             parent = pd;
             treeArc = a;
+            bestBirth = birth;
             PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
                         << ", parent " << parent);
             assert (minParentLevel + 1 >= oldVLevel);
         }
-    };
-    auto abortReparenting = [&oldVLevel, &minParentLevel](const Arc *) {
-        return minParentLevel + 1 == oldVLevel;
+        else if (pLevel == minParentLevel && ((preferOlderArc && birth < bestBirth) || (!preferOlderArc && birth > bestBirth)))
+        {
+            parent = pd;
+            treeArc = a;
+            bestBirth = birth;
+        }
     };
 
-    if (reverseArcDirection) {
-        diGraph->mapOutgoingArcsUntil(v, findParent, abortReparenting);
-    } else {
-        diGraph->mapIncomingArcsUntil(v, findParent, abortReparenting);
+    for (const auto& [a, birth]: vd->inArcInfos)
+    {
+        findParent(a, birth);
     }
 
     DiGraph::size_type levelDiff = 0U;
@@ -700,6 +731,7 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
         assert(parent->isReachable());
         assert(minParentLevel != SESVertexDataTimestamps::UNREACHABLE);
         vd->setParent(parent, treeArc);
+        vd->parentBirth = bestBirth;
         assert (vd->level >= oldVLevel);
         levelDiff = vd->level - oldVLevel;
         PRINT_DEBUG("Parent has changed, new parent is " << parent);
