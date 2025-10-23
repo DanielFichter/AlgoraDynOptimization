@@ -28,7 +28,6 @@
 #include "sesvertexdata.h"
 #include <sstream>
 #include <boost/circular_buffer.hpp>
-#include <unordered_map>
 
 namespace Algora {
 class DynamicDiGraph;
@@ -102,14 +101,12 @@ public:
 
 private:
     typedef boost::circular_buffer<SESVertexData*> PriorityQueue;
-    typedef unsigned long long DynamicTime;
 
     FastPropertyMap<SESVertexData*> data;
     FastPropertyMap<bool> reachable;
     FastPropertyMap<unsigned int> timesInQueue;
     PriorityQueue queue;
     const DynamicDiGraph * dyDiGraph;
-    std::unordered_map<Arc*, DynamicTime> arcAges;
 
     Vertex *root;
     bool initialized;

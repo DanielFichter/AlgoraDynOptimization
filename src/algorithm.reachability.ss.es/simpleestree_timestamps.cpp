@@ -21,7 +21,6 @@
  */
 
 #include "simpleestree_timestamps.h"
-#include "graph.dyn/dynamicdigraph.h"
 
 #include <vector>
 #include <climits>
@@ -291,8 +290,6 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onVertexAdd(Ve
 template<bool reverseArcDirection, bool preferOlderArc>
 void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcAdd(Arc *a)
 {
-    arcAges[a] = dyDiGraph->getCurrentTime();
-
     if (!initialized) {
         return;
     }
