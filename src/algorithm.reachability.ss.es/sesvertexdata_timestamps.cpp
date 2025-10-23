@@ -20,17 +20,30 @@
  *   http://algora.xaikal.org
  */
 
-#ifndef ALGORADYN_INFO_H
-#define ALGORADYN_INFO_H
+#include "sesvertexdata_timestamps.h"
+#include "graph/vertex.h"
+#include "graph/arc.h"
 
 namespace Algora {
 
-struct AlgoraDynInfo {
-  static constexpr char GIT_REVISION[] = "5320b3b853f2f0a5ca624ea1c6e7bb9f06dd2327";
-  static constexpr char GIT_DATE[] = "2025-10-23T09:28:23+02:00";
-  static constexpr char GIT_TIMESTAMP[] = "1761204503";
-};
+std::ostream &operator<<(std::ostream &os, const SESVertexDataTimestamps *vd)
+{
+    if (vd == nullptr) {
+        os << " null ";
+        return os;
+    }
+
+    os << vd->vertex << ": ";
+    //os << "parent: [" << vd->parent << "] ; level: " << vd->level;
+    os << "parent: [";
+    if (vd->parent) {
+      os << vd->parent->vertex << ", tree arc: " << vd->parent->treeArc
+         << ", level: " << vd->parent->level;
+    } else {
+        os << "null";
+    }
+    os << "] ; level: " << vd->level;
+    return os;
 }
 
-#endif
-
+}

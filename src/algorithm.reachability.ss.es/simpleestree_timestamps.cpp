@@ -44,7 +44,7 @@
 namespace Algora {
 
 #ifdef DEBUG_SIMPLEESTREE
-void printQueue(boost::circular_buffer<SESVertexData*> q) {
+void printQueue(boost::circular_buffer<SESVertexDataTimestamps*> q) {
     std::cerr << "PriorityQueue: ";
     while(!q.empty()) {
         std::cerr << q.front()->vertex << "[" << q.front()->level << "]" << ", ";
@@ -138,7 +138,7 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::run()
    }
    bfs.setStartVertex(root);
    if (data[root] == nullptr) {
-      data[root] = new SESVertexData(root, nullptr, nullptr, 0);
+      data[root] = new SESVertexDataTimestamps(root, nullptr, nullptr, 0);
    } else {
        data[root]->reset(nullptr, nullptr, 0);
    }
@@ -158,7 +158,7 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::run()
             h = a->getHead();
         }
         if (data[h] == nullptr) {
-            data[h] = new SESVertexData(h, data(t), a);
+            data[h] = new SESVertexDataTimestamps(h, data(t), a);
         } else {
             data[h]->reset(data(t), a);
         }
@@ -175,7 +175,7 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::run()
         prVertexConsidered();
 #endif
        if (data(v) == nullptr) {
-           data[v] = new SESVertexData(v);
+           data[v] = new SESVertexDataTimestamps(v);
            PRINT_DEBUG( v << " is a unreachable.")
        }
    });
@@ -284,7 +284,7 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onVertexAdd(Ve
 
     assert(data(v) == nullptr);
 
-    data[v] = new SESVertexData(v);
+    data[v] = new SESVertexDataTimestamps(v);
 }
 
 template<bool reverseArcDirection, bool preferOlderArc>
@@ -595,7 +595,7 @@ bool SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::checkTree()
 
    bool ok = true;
    diGraph->mapVertices([&](Vertex *v) {
-       auto bfsLevel = levels[v] == bfs.INF ? SESVertexData::UNREACHABLE : levels[v];
+       auto bfsLevel = levels[v] == bfs.INF ? SESVertexDataTimestamps::UNREACHABLE : levels[v];
        if (data[v]->level != bfsLevel) {
            std::cerr << "Level mismatch for vertex " << data[v]
                         << ": expected level " << bfsLevel << std::endl;
@@ -619,7 +619,7 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::rerun()
 }
 
 template<bool reverseArcDirection, bool preferOlderArc>
-DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::process(SESVertexData *vd, bool &limitReached) {
+DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::process(SESVertexDataTimestamps *vd, bool &limitReached) {
 
     if (vd->level == 0UL) {
         PRINT_DEBUG("No need to process source vertex " << vd << ".");
@@ -646,7 +646,7 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
 
     auto parent = oldParent;
     auto oldVLevel = vd->level;
-    auto minParentLevel = parent == nullptr ? SESVertexData::UNREACHABLE : parent->level;
+    auto minParentLevel = parent == nullptr ? SESVertexDataTimestamps::UNREACHABLE : parent->level;
     auto treeArc = vd->treeArc;
 
     PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
@@ -695,7 +695,7 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
                     << levelDiff);
     } else if (parent != oldParent || oldVLevel <= minParentLevel) {
         assert(parent->isReachable());
-        assert(minParentLevel != SESVertexData::UNREACHABLE);
+        assert(minParentLevel != SESVertexDataTimestamps::UNREACHABLE);
         vd->setParent(parent, treeArc);
         assert (vd->level >= oldVLevel);
         levelDiff = vd->level - oldVLevel;
@@ -748,7 +748,7 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
 }
 
 template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::restoreTree(SESVertexData *rd)
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::restoreTree(SESVertexDataTimestamps *rd)
 {
     auto n = diGraph->getSize();
     DiGraph::size_type affectedLimit = maxAffectedRatio < 1.0

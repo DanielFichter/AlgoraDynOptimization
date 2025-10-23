@@ -25,7 +25,7 @@
 
 #include "algorithm.reachability.ss/dynamicsinglesourcereachabilityalgorithm.h"
 #include "property/fastpropertymap.h"
-#include "sesvertexdata.h"
+#include "sesvertexdata_timestamps.h"
 #include <sstream>
 #include <boost/circular_buffer.hpp>
 
@@ -100,9 +100,9 @@ public:
     virtual void dumpData(std::ostream &os) const override;
 
 private:
-    typedef boost::circular_buffer<SESVertexData*> PriorityQueue;
+    typedef boost::circular_buffer<SESVertexDataTimestamps*> PriorityQueue;
 
-    FastPropertyMap<SESVertexData*> data;
+    FastPropertyMap<SESVertexDataTimestamps*> data;
     FastPropertyMap<bool> reachable;
     FastPropertyMap<unsigned int> timesInQueue;
     PriorityQueue queue;
@@ -130,12 +130,12 @@ private:
     profiling_counter rerunRequeued;
     profiling_counter rerunNumAffected;
 
-    void restoreTree(SESVertexData *rd);
+    void restoreTree(SESVertexDataTimestamps *rd);
     void cleanup(bool freeSpace);
     void dumpTree(std::ostream &os);
     bool checkTree();
     void rerun();
-    DiGraph::size_type process(SESVertexData *vd, bool &limitReached);
+    DiGraph::size_type process(SESVertexDataTimestamps *vd, bool &limitReached);
 };
 
 // explicit instantiation declaration
