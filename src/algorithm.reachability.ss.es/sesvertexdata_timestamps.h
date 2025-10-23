@@ -23,6 +23,7 @@
 #ifndef SESVERTEXDATATIMESTAMPS_H
 #define SESVERTEXDATATIMESTAMPS_H
 
+#include <vector>
 #include <climits>
 #include <iostream>
 #include <cassert>
@@ -37,9 +38,11 @@ class Arc;
 class SESVertexDataTimestamps
 {
     friend std::ostream& operator<<(std::ostream &os, const SESVertexDataTimestamps *vd);
+    
 
 public:
     typedef DiGraph::size_type level_type;
+    typedef unsigned long long DynamicTime;
     static constexpr level_type UNREACHABLE = std::numeric_limits<level_type>::max();
 
     SESVertexDataTimestamps(Vertex *v, SESVertexDataTimestamps *p = nullptr, Arc *a = nullptr,
@@ -103,7 +106,22 @@ public:
         return parent->vertex;
     }
 
+    void addArc(Arc* pArc, DynamicTime birth)
+    {
+        // TODO: consider multiarcs
+        inArcInfos.push_back({pArc, birth});
+    }
+
 //private:
+
+    struct ArcInfo
+    {
+        Arc* pArc;
+        DynamicTime birth;
+    };
+
+    std::vector<ArcInfo> inArcInfos;
+
     Vertex *vertex;
     SESVertexDataTimestamps *parent;
     Arc *treeArc;

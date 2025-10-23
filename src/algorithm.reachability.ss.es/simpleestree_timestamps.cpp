@@ -21,6 +21,7 @@
  */
 
 #include "simpleestree_timestamps.h"
+#include "graph.dyn/dynamicdigraph.h"
 
 #include <vector>
 #include <climits>
@@ -321,6 +322,8 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcAdd(Arc *
 
     assert(td != nullptr);
     assert(hd != nullptr);
+
+    hd->addArc(a, dyDiGraph->getCurrentTime());
 
     if (!td->isReachable()) {
         PRINT_DEBUG("Tail is unreachable.")
