@@ -650,10 +650,11 @@ DiGraph::size_type SimpleESTreeTimeStampsFPM<reverseArcDirection, preferOlder>::
     auto oldVLevel = vd->level;
     auto minParentLevel = parent == nullptr ? SESVertexData::UNREACHABLE : parent->level;
     auto treeArc = vd->treeArc;
+    DynamicTime bestCreationTime = parent == nullptr ? (preferOlder ? dyDiGraph->getMaxTime() : 0) : creationTime[treeArc];
 
     PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
 
-    auto findParent = [this,&parent,&minParentLevel,&oldVLevel,&treeArc](Arc *a) {
+    auto findParent = [this,&parent,&minParentLevel,&oldVLevel,&treeArc,&bestCreationTime](Arc *a) {
 #ifdef COLLECT_PR_DATA
             prArcConsidered();
 #endif
@@ -670,10 +671,19 @@ DiGraph::size_type SimpleESTreeTimeStampsFPM<reverseArcDirection, preferOlder>::
             minParentLevel = pLevel;
             parent = pd;
             treeArc = a;
+            bestCreationTime = creationTime[a];
             PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
                         << ", parent " << parent);
             assert (minParentLevel + 1 >= oldVLevel);
         }
+        // TODO: use if constexpr
+        else if (pLevel == minParentLevel && ((preferOlder && creationTime[a] < bestCreationTime) || (!preferOlder && creationTime[a] > bestCreationTime)))
+        {
+            parent = pd;
+            treeArc = a;
+            bestCreationTime = creationTime[a];
+        }
+        
     };
     auto abortReparenting = [&oldVLevel, &minParentLevel](const Arc *) {
         return minParentLevel + 1 == oldVLevel;
