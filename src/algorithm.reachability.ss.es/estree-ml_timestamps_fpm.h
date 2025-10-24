@@ -91,11 +91,13 @@ public:
 
 private:
     typedef boost::circular_buffer<ESVertexData*> PriorityQueue;
+    typedef long long unsigned DynamicTime;
 
     FastPropertyMap<ESVertexData*> data;
     FastPropertyMap<DiGraph::size_type> inNeighborIndices;
     FastPropertyMap<bool> reachable;
     FastPropertyMap<unsigned int> timesInQueue;
+    FastPropertyMap<DynamicTime> creationTime;
 		PriorityQueue queue;
     const DynamicDiGraph* dyDiGraph;
 

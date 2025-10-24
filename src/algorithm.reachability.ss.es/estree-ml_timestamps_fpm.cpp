@@ -21,6 +21,7 @@
  */
 
 #include "estree-ml_timestamps_fpm.h"
+#include "graph.dyn/dynamicdigraph.h"
 
 #include <vector>
 #include <climits>
@@ -364,6 +365,8 @@ void ESTreeMLTimeStampsFPM<reverseArcDirection, preferOlder>::onArcAdd(Arc *a)
 
     assert(td != nullptr);
     assert(hd != nullptr);
+
+    creationTime[a] = dyDiGraph->getCurrentTime();
 
     // store arc
     hd->addInNeighbor(td, a);
