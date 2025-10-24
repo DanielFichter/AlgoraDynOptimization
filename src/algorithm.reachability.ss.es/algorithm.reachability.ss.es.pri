@@ -14,7 +14,8 @@ HEADERS += \
     $$PWD/simpleestree_reservoirsampling.h \
     $$PWD/simpleestree_timestamps.h \
     $$PWD/sesvertexdata_timestamps.h \
-    $$PWD/simpleestree_timestamps_fpm.h
+    $$PWD/simpleestree_timestamps_fpm.h \
+    $$PWD/estree-ml_timestamps_fpm.h
 
 SOURCES += \
     $$PWD/estree-ml.cpp \
@@ -30,4 +31,5 @@ SOURCES += \
     $$PWD/simpleestree_reservoirsampling.cpp \
     $$PWD/simpleestree_timestamps.cpp \
     $$PWD/sesvertexdata_timestamps.cpp \
-    $$PWD/simpleestree_timestamps_fpm.cpp
+    $$PWD/simpleestree_timestamps_fpm.cpp \
+    $$PWD/estree-ml_timestamps_fpm.cpp
