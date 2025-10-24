@@ -194,6 +194,41 @@ bfs.onNonTreeArcDiscover([this](Arc *a) {
 
    runAlgorithm(bfs, diGraph);
 
+   diGraph->mapArcs([this](Arc *a) {
+#ifdef COLLECT_PR_DATA
+        prArcConsidered();
+#endif
+       if (a->isLoop()
+                || (!reverseArcDirection && a->getHead() == source)
+                || (reverseArcDirection && a->getTail() == source)) {
+           return;
+       }
+       Vertex *t;
+       Vertex *h;
+       if (reverseArcDirection) {
+           t = a->getHead();
+           h = a->getTail();
+       } else {
+           t = a->getTail();
+           h = a->getHead();
+       }
+       SESVertexDataTimestamps *td = data(t);
+       SESVertexDataTimestamps *hd = data(h);
+
+       if (td == nullptr) {
+           td = new SESVertexDataTimestamps(t);
+           data[t] = td;
+       }
+       if (hd == nullptr) {
+           hd = new SESVertexDataTimestamps(h);
+           data[h] = hd;
+       }
+       if (!td->isReachable()) {
+            PRINT_DEBUG( a << " is an unvisited non-tree arc.")
+            hd->addArc(a, 0);
+       }
+   });
+
    diGraph->mapVertices([this](Vertex *v) {
 #ifdef COLLECT_PR_DATA
         prVertexConsidered();
