@@ -26,9 +26,9 @@
 namespace Algora {
 
 struct AlgoraDynInfo {
-  static constexpr char GIT_REVISION[] = "8c9a918be11a8dac6f391bd04b6b3987d4a4f121";
-  static constexpr char GIT_DATE[] = "2025-10-23T14:59:24+02:00";
-  static constexpr char GIT_TIMESTAMP[] = "1761224364";
+  static constexpr char GIT_REVISION[] = "bb14816c2568b2e1c746b47035684a940279675d";
+  static constexpr char GIT_DATE[] = "2025-10-24T09:43:52+02:00";
+  static constexpr char GIT_TIMESTAMP[] = "1761291832";
 };
 }
 
