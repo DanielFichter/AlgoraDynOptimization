@@ -322,6 +322,8 @@ void SimpleESTreeTimeStampsFPM<reverseArcDirection, preferOlder>::onArcAdd(Arc *
     assert(td != nullptr);
     assert(hd != nullptr);
 
+    creationTime[a] = dyDiGraph->getCurrentTime();
+
     if (!td->isReachable()) {
         PRINT_DEBUG("Tail is unreachable.")
 #ifdef COLLECT_PR_DATA

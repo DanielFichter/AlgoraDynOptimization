@@ -104,10 +104,12 @@ public:
 
 private:
     typedef boost::circular_buffer<SESVertexData*> PriorityQueue;
+    typedef long long unsigned DynamicTime;
 
     FastPropertyMap<SESVertexData*> data;
     FastPropertyMap<bool> reachable;
     FastPropertyMap<unsigned int> timesInQueue;
+    FastPropertyMap<DynamicTime> creationTime;
     PriorityQueue queue;
     const DynamicDiGraph* dyDiGraph;
 
