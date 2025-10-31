@@ -845,6 +845,8 @@ void SimpleESTreeTimeStampsFPM<reverseArcDirection, preferOlder>::cleanup(bool f
     initialized = false;
 }
 
-template class SimpleESTreeTimeStampsFPM<false>;
-template class SimpleESTreeTimeStampsFPM<true>;
+template class SimpleESTreeTimeStampsFPM<false, false>;
+template class SimpleESTreeTimeStampsFPM<false, true>;
+template class SimpleESTreeTimeStampsFPM<true, false>;
+template class SimpleESTreeTimeStampsFPM<true, true>;
 }

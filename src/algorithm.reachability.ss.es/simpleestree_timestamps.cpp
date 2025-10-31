@@ -903,6 +903,8 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::cleanup(bool f
     initialized = false;
 }
 
-template class SimpleESTreeTimeStamps<false>;
-template class SimpleESTreeTimeStamps<true>;
+template class SimpleESTreeTimeStamps<false, false>;
+template class SimpleESTreeTimeStamps<false, true>;
+template class SimpleESTreeTimeStamps<true, false>;
+template class SimpleESTreeTimeStamps<true, true>;
 }
