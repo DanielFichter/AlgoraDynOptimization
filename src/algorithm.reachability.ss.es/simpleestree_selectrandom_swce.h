@@ -20,8 +20,8 @@
  *   http://algora.xaikal.org
  */
 
-#ifndef SIMPLEESTREESELECTRANDOM_H
-#define SIMPLEESTREESELECTRANDOM_H
+#ifndef SIMPLEESTREESELECTRANDOMSWCE_H
+#define SIMPLEESTREESELECTRANDOMSWCE_H
 
 #include "algorithm.reachability.ss/dynamicsinglesourcereachabilityalgorithm.h"
 #include "property/propertymap.h"
@@ -92,15 +92,15 @@ private:
  * and not by 
 */
 template<bool reverseArcDirection = false>
-class SimpleESTreeSelectRandom : public DynamicSingleSourceReachabilityAlgorithm
+class SimpleESTreeSelectRandomSWCE : public DynamicSingleSourceReachabilityAlgorithm
 {
 public:
     // requeueLimit, maxAffectedRatio
     typedef std::tuple<unsigned int, double> ParameterSet;
 
-    explicit SimpleESTreeSelectRandom(unsigned int requeueLimit = 5, double maxAffectedRatio = .5);
-    explicit SimpleESTreeSelectRandom(const ParameterSet &params);
-    virtual ~SimpleESTreeSelectRandom() override;
+    explicit SimpleESTreeSelectRandomSWCE(unsigned int requeueLimit = 5, double maxAffectedRatio = .5);
+    explicit SimpleESTreeSelectRandomSWCE(const ParameterSet &params);
+    virtual ~SimpleESTreeSelectRandomSWCE() override;
     void setRequeueLimit(unsigned int limit) {
         requeueLimit = limit;
     }
@@ -187,7 +187,7 @@ private:
     profiling_counter rerunRequeued;
     profiling_counter rerunNumAffected;
     ArcPool potentialTreeArcs;
-    std::mt19937 generateRandomNumber;
+    std::ranlux48_base generateRandomNumber;
 
     void restoreTree(SESVertexData *rd);
     std::pair<Algora::Arc*, SESVertexData*> selectRandomTreeArc(const ArcPool& potentialTreeArcs);

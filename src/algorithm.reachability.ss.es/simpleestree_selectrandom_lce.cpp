@@ -20,7 +20,7 @@
  *   http://algora.xaikal.org
  */
 
-#include "simpleestree_selectrandom.h"
+#include "simpleestree_selectrandom_lce.h"
 
 #include <vector>
 #include <climits>
@@ -56,12 +56,12 @@ void printQueue(boost::circular_buffer<SESVertexData*> q) {
 
 
 template<bool reverseArcDirection>
-SimpleESTreeSelectRandom<reverseArcDirection>::SimpleESTreeSelectRandom(unsigned int requeueLimit, double maxAffectedRatio)
-    : SimpleESTreeSelectRandom<reverseArcDirection>(std::make_pair(requeueLimit, maxAffectedRatio))
+SimpleESTreeSelectRandomLCE<reverseArcDirection>::SimpleESTreeSelectRandomLCE(unsigned int requeueLimit, double maxAffectedRatio)
+    : SimpleESTreeSelectRandomLCE<reverseArcDirection>(std::make_pair(requeueLimit, maxAffectedRatio))
 { }
 
 template<bool reverseArcDirection>
-SimpleESTreeSelectRandom<reverseArcDirection>::SimpleESTreeSelectRandom(const SimpleESTreeSelectRandom<reverseArcDirection>::ParameterSet &params)
+SimpleESTreeSelectRandomLCE<reverseArcDirection>::SimpleESTreeSelectRandomLCE(const SimpleESTreeSelectRandomLCE<reverseArcDirection>::ParameterSet &params)
     : DynamicSingleSourceReachabilityAlgorithm(), root(nullptr),
       initialized(false), requeueLimit(std::get<0>(params)),
       maxAffectedRatio(std::get<1>(params)),
@@ -81,13 +81,13 @@ SimpleESTreeSelectRandom<reverseArcDirection>::SimpleESTreeSelectRandom(const Si
 }
 
 template<bool reverseArcDirection>
-SimpleESTreeSelectRandom<reverseArcDirection>::~SimpleESTreeSelectRandom()
+SimpleESTreeSelectRandomLCE<reverseArcDirection>::~SimpleESTreeSelectRandomLCE()
 {
     cleanup(true);
 }
 
 template<bool reverseArcDirection>
-DiGraph::size_type SimpleESTreeSelectRandom<reverseArcDirection>::getDepthOfBFSTree() const
+DiGraph::size_type SimpleESTreeSelectRandomLCE<reverseArcDirection>::getDepthOfBFSTree() const
 {
 	DiGraph::size_type maxLevel = 0U;
     diGraph->mapVertices([&](Vertex *v) {
@@ -99,7 +99,7 @@ DiGraph::size_type SimpleESTreeSelectRandom<reverseArcDirection>::getDepthOfBFST
 }
 
 template<bool reverseArcDirection>
-DiGraph::size_type SimpleESTreeSelectRandom<reverseArcDirection>::getNumReachable() const
+DiGraph::size_type SimpleESTreeSelectRandomLCE<reverseArcDirection>::getNumReachable() const
 {
 	DiGraph::size_type numR = 0U;
     diGraph->mapVertices([&](Vertex *v) {
@@ -111,13 +111,13 @@ DiGraph::size_type SimpleESTreeSelectRandom<reverseArcDirection>::getNumReachabl
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::run()
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::run()
 {
     if (initialized) {
         return;
     }
 
-    PRINT_DEBUG("Initializing SimpleESTreeSelectRandom...");
+    PRINT_DEBUG("Initializing SimpleESTreeSelectRandomLCE...");
 
     if (reachable.size() < diGraph->getSize()) {
         reachable.resetAll(diGraph->getSize());
@@ -187,7 +187,7 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::run()
 }
 
 template<bool reverseArcDirection>
-std::string SimpleESTreeSelectRandom<reverseArcDirection>::getProfilingInfo() const
+std::string SimpleESTreeSelectRandomLCE<reverseArcDirection>::getProfilingInfo() const
 {
     std::stringstream ss;
 #ifdef COLLECT_PR_DATA
@@ -215,7 +215,7 @@ std::string SimpleESTreeSelectRandom<reverseArcDirection>::getProfilingInfo() co
 }
 
 template<bool reverseArcDirection>
-DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeSelectRandom<reverseArcDirection>::getProfile() const
+DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeSelectRandomLCE<reverseArcDirection>::getProfile() const
 {
     auto profile = DynamicSingleSourceReachabilityAlgorithm::getProfile();
     profile.push_back(std::make_pair(std::string("vertices_moved_down"), movesDown));
@@ -240,7 +240,7 @@ DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeSelectRandom<rever
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::onDiGraphSet()
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::onDiGraphSet()
 {
     DynamicSingleSourceReachabilityAlgorithm::onDiGraphSet();
     cleanup(false);
@@ -263,14 +263,14 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::onDiGraphSet()
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::onDiGraphUnset()
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::onDiGraphUnset()
 {
     DynamicSingleSourceReachabilityAlgorithm::onDiGraphUnset();
     cleanup(true);
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::onVertexAdd(Vertex *v)
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::onVertexAdd(Vertex *v)
 {
     if (!initialized) {
         return;
@@ -282,7 +282,7 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::onVertexAdd(Vertex *v)
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::onArcAdd(Arc *a)
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::onArcAdd(Arc *a)
 {
     if (!initialized) {
         return;
@@ -414,7 +414,7 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::onArcAdd(Arc *a)
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::onVertexRemove(Vertex *v)
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::onVertexRemove(Vertex *v)
 {
     if (!initialized) {
         return;
@@ -429,7 +429,7 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::onVertexRemove(Vertex *v)
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::onArcRemove(Arc *a)
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::onArcRemove(Arc *a)
 {
    if (!initialized) {
         return;
@@ -496,13 +496,13 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::onArcRemove(Arc *a)
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::onSourceSet()
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::onSourceSet()
 {
     cleanup(false);
 }
 
 template<bool reverseArcDirection>
-bool SimpleESTreeSelectRandom<reverseArcDirection>::query(const Vertex *t)
+bool SimpleESTreeSelectRandomLCE<reverseArcDirection>::query(const Vertex *t)
 {
     PRINT_DEBUG("Querying reachability of " << t);
     if (t == source) {
@@ -519,7 +519,7 @@ bool SimpleESTreeSelectRandom<reverseArcDirection>::query(const Vertex *t)
 }
 
 template<bool reverseArcDirection>
-std::vector<Arc *> SimpleESTreeSelectRandom<reverseArcDirection>::queryPath(const Vertex *t)
+std::vector<Arc *> SimpleESTreeSelectRandomLCE<reverseArcDirection>::queryPath(const Vertex *t)
 {
     std::vector<Arc*> path;
     if (!query(t) || t == source) {
@@ -541,7 +541,7 @@ std::vector<Arc *> SimpleESTreeSelectRandom<reverseArcDirection>::queryPath(cons
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::dumpData(std::ostream &os) const
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::dumpData(std::ostream &os) const
 {
     if (!initialized) {
         os << "uninitialized" << std::endl;
@@ -563,7 +563,7 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::dumpData(std::ostream &os) c
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::dumpTree(std::ostream &os)
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::dumpTree(std::ostream &os)
 {
     if (!initialized) {
         os << "uninitialized" << std::endl;
@@ -577,7 +577,7 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::dumpTree(std::ostream &os)
 }
 
 template<bool reverseArcDirection>
-bool SimpleESTreeSelectRandom<reverseArcDirection>::checkTree()
+bool SimpleESTreeSelectRandomLCE<reverseArcDirection>::checkTree()
 {
    BreadthFirstSearch<FastPropertyMap,true,reverseArcDirection> bfs;
    bfs.setStartVertex(source);
@@ -600,7 +600,7 @@ bool SimpleESTreeSelectRandom<reverseArcDirection>::checkTree()
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::rerun()
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::rerun()
 {
 #ifdef COLLECT_PR_DATA
     reruns++;
@@ -613,7 +613,7 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::rerun()
 }
 
 template<bool reverseArcDirection>
-DiGraph::size_type SimpleESTreeSelectRandom<reverseArcDirection>::process(SESVertexData *vd, bool &limitReached) {
+DiGraph::size_type SimpleESTreeSelectRandomLCE<reverseArcDirection>::process(SESVertexData *vd, bool &limitReached) {
 
     if (vd->level == 0UL) {
         PRINT_DEBUG("No need to process source vertex " << vd << ".");
@@ -753,7 +753,7 @@ DiGraph::size_type SimpleESTreeSelectRandom<reverseArcDirection>::process(SESVer
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::restoreTree(SESVertexData *rd)
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::restoreTree(SESVertexData *rd)
 {
     auto n = diGraph->getSize();
     DiGraph::size_type affectedLimit = maxAffectedRatio < 1.0
@@ -812,7 +812,7 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::restoreTree(SESVertexData *r
 }
 
 template<bool reverseArcDirection>
-void SimpleESTreeSelectRandom<reverseArcDirection>::cleanup(bool freeSpace)
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::cleanup(bool freeSpace)
 {
     if (initialized) {
         for (auto i = data.cbegin(); i != data.cend(); i++) {
@@ -839,12 +839,12 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::cleanup(bool freeSpace)
 }
 
 template<bool reverseArcDirection>
-std::pair<Arc*, SESVertexData*> SimpleESTreeSelectRandom<reverseArcDirection>::selectRandomTreeArc(const ArcPool& potentialTreeArcs)
+std::pair<Arc*, SESVertexData*> SimpleESTreeSelectRandomLCE<reverseArcDirection>::selectRandomTreeArc(const ArcPool& potentialTreeArcs)
 {
     const size_t arcIndex = generateRandomNumber() % potentialTreeArcs.size();
     return potentialTreeArcs.at(arcIndex);
 }
 
-template class SimpleESTreeSelectRandom<false>;
-template class SimpleESTreeSelectRandom<true>;
+template class SimpleESTreeSelectRandomLCE<false>;
+template class SimpleESTreeSelectRandomLCE<true>;
 }

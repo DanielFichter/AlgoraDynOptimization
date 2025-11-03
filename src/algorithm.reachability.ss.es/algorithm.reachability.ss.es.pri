@@ -15,7 +15,10 @@ HEADERS += \
     $$PWD/simpleestree_timestamps.h \
     $$PWD/sesvertexdata_timestamps.h \
     $$PWD/simpleestree_timestamps_fpm.h \
-    $$PWD/estree-ml_timestamps_fpm.h
+    $$PWD/estree-ml_timestamps_fpm.h \
+    $$PWD/simpleestree_selectrandom_lce.h \
+    $$PWD/simpleestree_selectrandom_mte.h \
+    $PWD/simpleestree_selectrandom_swce.h
 
 SOURCES += \
     $$PWD/estree-ml.cpp \
@@ -24,7 +27,6 @@ SOURCES += \
     $$PWD/estree-queue.cpp \
     $$PWD/estree-bqueue.cpp \
     $$PWD/sesvertexdata.cpp \
-    $$PWD/simpleestree_selectrandom.cpp \
     $$PWD/simpleestree_multipletreearcs.cpp \
     $$PWD/sesvertexdatamultipleparents.cpp \
     $$PWD/reservoirsampler.cpp \
@@ -32,4 +34,7 @@ SOURCES += \
     $$PWD/simpleestree_timestamps.cpp \
     $$PWD/sesvertexdata_timestamps.cpp \
     $$PWD/simpleestree_timestamps_fpm.cpp \
-    $$PWD/estree-ml_timestamps_fpm.cpp
+    $$PWD/estree-ml_timestamps_fpm.cpp \
+    $$PWD/simpleestree_selectrandom_lce.cpp \
+    $$PWD/simpleestree_selectrandom_mte.cpp \
+    $$PWD/simpleestree_selectrandom_swce.cpp
