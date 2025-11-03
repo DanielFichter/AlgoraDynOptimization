@@ -187,7 +187,7 @@ private:
     profiling_counter rerunRequeued;
     profiling_counter rerunNumAffected;
     ArcPool potentialTreeArcs;
-    std::subtract_with_carry_engine<std::vector<Algora::Arc*>::size_type, 48, 5, 12> generateRandomNumber;
+    std::mt19937 generateRandomNumber;
 
     void restoreTree(SESVertexData *rd);
     std::pair<Algora::Arc*, SESVertexData*> selectRandomTreeArc(const ArcPool& potentialTreeArcs);
