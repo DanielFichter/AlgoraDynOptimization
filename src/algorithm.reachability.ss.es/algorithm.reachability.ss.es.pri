@@ -15,7 +15,8 @@ HEADERS += \
     $$PWD/simpleestree_timestamps.h \
     $$PWD/sesvertexdata_timestamps.h \
     $$PWD/simpleestree_timestamps_fpm.h \
-    $$PWD/estree-ml_timestamps_fpm.h
+    $$PWD/estree-ml_timestamps_fpm.h \
+    $$PWD/random_simulator.h
 
 SOURCES += \
     $$PWD/estree-ml.cpp \
@@ -32,4 +33,5 @@ SOURCES += \
     $$PWD/simpleestree_timestamps.cpp \
     $$PWD/sesvertexdata_timestamps.cpp \
     $$PWD/simpleestree_timestamps_fpm.cpp \
-    $$PWD/estree-ml_timestamps_fpm.cpp
+    $$PWD/estree-ml_timestamps_fpm.cpp \
+    $$PWD/random_simulator.cpp

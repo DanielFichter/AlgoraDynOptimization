@@ -26,6 +26,7 @@
 #include "algorithm.reachability.ss/dynamicsinglesourcereachabilityalgorithm.h"
 #include "property/propertymap.h"
 #include "property/fastpropertymap.h"
+#include "random_simulator.h"
 #include "sesvertexdata.h"
 #include <sstream>
 #include <random>
@@ -187,7 +188,7 @@ private:
     profiling_counter rerunRequeued;
     profiling_counter rerunNumAffected;
     ArcPool potentialTreeArcs;
-    std::mt19937 generateRandomNumber;
+    RandomSimulator<1'000> random_simulator;
 
     void restoreTree(SESVertexData *rd);
     std::pair<Algora::Arc*, SESVertexData*> selectRandomTreeArc(const ArcPool& potentialTreeArcs);

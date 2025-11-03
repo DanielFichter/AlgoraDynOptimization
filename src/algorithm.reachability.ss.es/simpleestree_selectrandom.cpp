@@ -58,7 +58,7 @@ void printQueue(boost::circular_buffer<SESVertexData*> q) {
 template<bool reverseArcDirection>
 SimpleESTreeSelectRandom<reverseArcDirection>::SimpleESTreeSelectRandom(unsigned int requeueLimit, double maxAffectedRatio)
     : SimpleESTreeSelectRandom<reverseArcDirection>(std::make_pair(requeueLimit, maxAffectedRatio))
-{ }
+{ random_simulator.initialize(); }
 
 template<bool reverseArcDirection>
 SimpleESTreeSelectRandom<reverseArcDirection>::SimpleESTreeSelectRandom(const SimpleESTreeSelectRandom<reverseArcDirection>::ParameterSet &params)
@@ -77,6 +77,7 @@ SimpleESTreeSelectRandom<reverseArcDirection>::SimpleESTreeSelectRandom(const Si
     data.setDefaultValue(nullptr);
     reachable.setDefaultValue(false);
 
+    random_simulator.initialize();
     timesInQueue.setDefaultValue(0U);
 }
 
@@ -841,7 +842,7 @@ void SimpleESTreeSelectRandom<reverseArcDirection>::cleanup(bool freeSpace)
 template<bool reverseArcDirection>
 std::pair<Arc*, SESVertexData*> SimpleESTreeSelectRandom<reverseArcDirection>::selectRandomTreeArc(const ArcPool& potentialTreeArcs)
 {
-    const size_t arcIndex = generateRandomNumber() % potentialTreeArcs.size();
+    const size_t arcIndex = random_simulator.sample() % potentialTreeArcs.size();
     return potentialTreeArcs.at(arcIndex);
 }
 
