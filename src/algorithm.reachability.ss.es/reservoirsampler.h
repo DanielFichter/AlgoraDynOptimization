@@ -10,6 +10,7 @@ namespace Algora
     class Arc;
     class SESVertexData;
 
+    template<typename RandomEngine>
     class ReservoirSampler
     {
     public:
@@ -21,7 +22,7 @@ namespace Algora
 
     private:
         ArcParentPair reservoirValue = {};
-        std::mt19937 mersenne_twister_engine;
+        RandomEngine randomEngine;
         std::uniform_real_distribution<float> generateRandomNumber{0., 1.};
         float w;
         size_t currentValueIndex = 0;

@@ -1,31 +1,37 @@
 #include "reservoirsampler.h"
 
 #include <cmath>
+#include <cstdlib>
 
-Algora::ReservoirSampler::ReservoirSampler() : mersenne_twister_engine{std::random_device{}()}, w{generateRandomNumber(mersenne_twister_engine)}
+
+template<typename RandomEngine> 
+Algora::ReservoirSampler<RandomEngine>::ReservoirSampler() : randomEngine{std::random_device{}()}, w{generateRandomNumber(randomEngine)}
 {
 }
 
-void Algora::ReservoirSampler::provide(ArcParentPair ap)
+template<typename RandomEngine> 
+void Algora::ReservoirSampler<RandomEngine>::provide(ArcParentPair ap)
 {
     if (currentValueIndex == nextReservoirValueIndex)
     {
         reservoirValue = ap;
-        w = w * generateRandomNumber(mersenne_twister_engine);
-        nextReservoirValueIndex += std::floor(std::log(generateRandomNumber(mersenne_twister_engine)) / std::log(1 - w)) + 1;
+        w = w * generateRandomNumber(randomEngine);
+        nextReservoirValueIndex += std::floor(std::log(generateRandomNumber(randomEngine)) / std::log(1 - w)) + 1;
     }
     currentValueIndex++;
 }
 
-const Algora::ReservoirSampler::ArcParentPair &Algora::ReservoirSampler::sample() const
+template<typename RandomEngine> 
+const typename Algora::ReservoirSampler<RandomEngine>::ArcParentPair &Algora::ReservoirSampler<RandomEngine>::sample() const
 {
     return reservoirValue;
 }
 
-void Algora::ReservoirSampler::reset()
+template<typename RandomEngine> 
+void Algora::ReservoirSampler<RandomEngine>::reset()
 {
     currentValueIndex = 0;
     nextReservoirValueIndex = 0;
     reservoirValue = {};
-    w = generateRandomNumber(mersenne_twister_engine);
+    w = generateRandomNumber(randomEngine);
 }

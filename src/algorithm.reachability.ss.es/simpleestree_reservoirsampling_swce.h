@@ -20,14 +20,15 @@
  *   http://algora.xaikal.org
  */
 
-#ifndef SIMPLEESTREERESERVOIRSAMPLING_H
-#define SIMPLEESTREERESERVOIRSAMPLING_H
+#ifndef SIMPLEESTREERESERVOIRSAMPLINGSWCE_H
+#define SIMPLEESTREERESERVOIRSAMPLINGSWCE_H
 
 #include "algorithm.reachability.ss/dynamicsinglesourcereachabilityalgorithm.h"
 #include "property/propertymap.h"
 #include "property/fastpropertymap.h"
 #include "sesvertexdata.h"
 #include "reservoirsampler.h"
+#include <random>
 #include <sstream>
 #include <boost/circular_buffer.hpp>
 
@@ -35,15 +36,15 @@ namespace Algora
 {
 
     template <bool reverseArcDirection = false>
-    class SimpleESTreeReservoirSampling : public DynamicSingleSourceReachabilityAlgorithm
+    class SimpleESTreeReservoirSamplingSWCE : public DynamicSingleSourceReachabilityAlgorithm
     {
     public:
         // requeueLimit, maxAffectedRatio
         typedef std::tuple<unsigned int, double> ParameterSet;
 
-        explicit SimpleESTreeReservoirSampling(unsigned int requeueLimit = 5, double maxAffectedRatio = .5);
-        explicit SimpleESTreeReservoirSampling(const ParameterSet &params);
-        virtual ~SimpleESTreeReservoirSampling() override;
+        explicit SimpleESTreeReservoirSamplingSWCE(unsigned int requeueLimit = 5, double maxAffectedRatio = .5);
+        explicit SimpleESTreeReservoirSamplingSWCE(const ParameterSet &params);
+        virtual ~SimpleESTreeReservoirSamplingSWCE() override;
         void setRequeueLimit(unsigned int limit)
         {
             requeueLimit = limit;
@@ -116,7 +117,7 @@ namespace Algora
         FastPropertyMap<SESVertexData *> data;
         FastPropertyMap<bool> reachable;
         FastPropertyMap<unsigned int> timesInQueue;
-        ReservoirSampler sampler;
+        ReservoirSampler<std::ranlux48_base> sampler;
         PriorityQueue queue;
 
         Vertex *root;
@@ -150,8 +151,8 @@ namespace Algora
     };
 
     // explicit instantiation declaration
-    extern template class SimpleESTreeReservoirSampling<false>;
-    extern template class SimpleESTreeReservoirSampling<true>;
+    extern template class SimpleESTreeReservoirSamplingSWCE<false>;
+    extern template class SimpleESTreeReservoirSamplingSWCE<true>;
 }
 
-#endif // SIMPLEESTREERESERVOIRSAMPLING_H
+#endif // SIMPLEESTREERESERVOIRSAMPLINGSWCE_H
