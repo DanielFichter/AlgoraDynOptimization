@@ -20,7 +20,7 @@
  *   http://algora.xaikal.org
  */
 
-#include "simpleestree_reservoirsampling.h"
+#include "simpleestree_reservoirsampling_swce.h"
 #include "graph/vertex.h"
 #include "algorithm.basic.traversal/breadthfirstsearch.h"
 #include "algorithm/digraphalgorithmexception.h"

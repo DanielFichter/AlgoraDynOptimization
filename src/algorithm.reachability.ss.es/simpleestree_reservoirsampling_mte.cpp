@@ -20,7 +20,7 @@
  *   http://algora.xaikal.org
  */
 
-#include "simpleestree_reservoirsampling.h"
+#include "simpleestree_reservoirsampling_mte.h"
 #include "graph/vertex.h"
 #include "algorithm.basic.traversal/breadthfirstsearch.h"
 #include "algorithm/digraphalgorithmexception.h"
@@ -55,13 +55,13 @@ namespace Algora
 #endif
 
     template <bool reverseArcDirection>
-    SimpleESTreeReservoirSampling<reverseArcDirection>::SimpleESTreeReservoirSampling(unsigned int requeueLimit, double maxAffectedRatio)
-        : SimpleESTreeReservoirSampling<reverseArcDirection>(std::make_pair(requeueLimit, maxAffectedRatio))
+    SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::SimpleESTreeReservoirSamplingMTE(unsigned int requeueLimit, double maxAffectedRatio)
+        : SimpleESTreeReservoirSamplingMTE<reverseArcDirection>(std::make_pair(requeueLimit, maxAffectedRatio))
     {
     }
 
     template <bool reverseArcDirection>
-    SimpleESTreeReservoirSampling<reverseArcDirection>::SimpleESTreeReservoirSampling(const SimpleESTreeReservoirSampling<reverseArcDirection>::ParameterSet &params)
+    SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::SimpleESTreeReservoirSamplingMTE(const SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::ParameterSet &params)
         : DynamicSingleSourceReachabilityAlgorithm(), root(nullptr),
           initialized(false), requeueLimit(std::get<0>(params)),
           maxAffectedRatio(std::get<1>(params)),
@@ -81,13 +81,13 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    SimpleESTreeReservoirSampling<reverseArcDirection>::~SimpleESTreeReservoirSampling()
+    SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::~SimpleESTreeReservoirSamplingMTE()
     {
         cleanup(true);
     }
 
     template <bool reverseArcDirection>
-    DiGraph::size_type SimpleESTreeReservoirSampling<reverseArcDirection>::getDepthOfBFSTree() const
+    DiGraph::size_type SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::getDepthOfBFSTree() const
     {
         DiGraph::size_type maxLevel = 0U;
         diGraph->mapVertices([&](Vertex *v)
@@ -99,7 +99,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    DiGraph::size_type SimpleESTreeReservoirSampling<reverseArcDirection>::getNumReachable() const
+    DiGraph::size_type SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::getNumReachable() const
     {
         DiGraph::size_type numR = 0U;
         diGraph->mapVertices([&](Vertex *v)
@@ -111,14 +111,14 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::run()
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::run()
     {
         if (initialized)
         {
             return;
         }
 
-        PRINT_DEBUG("Initializing SimpleESTreeReservoirSampling...");
+        PRINT_DEBUG("Initializing SimpleESTreeReservoirSamplingMTE...");
 
         if (reachable.size() < diGraph->getSize())
         {
@@ -202,7 +202,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    std::string SimpleESTreeReservoirSampling<reverseArcDirection>::getProfilingInfo() const
+    std::string SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::getProfilingInfo() const
     {
         std::stringstream ss;
 #ifdef COLLECT_PR_DATA
@@ -230,7 +230,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeReservoirSampling<reverseArcDirection>::getProfile() const
+    DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::getProfile() const
     {
         auto profile = DynamicSingleSourceReachabilityAlgorithm::getProfile();
         profile.push_back(std::make_pair(std::string("vertices_moved_down"), movesDown));
@@ -255,7 +255,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::onDiGraphSet()
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::onDiGraphSet()
     {
         DynamicSingleSourceReachabilityAlgorithm::onDiGraphSet();
         cleanup(false);
@@ -278,14 +278,14 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::onDiGraphUnset()
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::onDiGraphUnset()
     {
         DynamicSingleSourceReachabilityAlgorithm::onDiGraphUnset();
         cleanup(true);
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::onVertexAdd(Vertex *v)
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::onVertexAdd(Vertex *v)
     {
         if (!initialized)
         {
@@ -298,7 +298,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::onArcAdd(Arc *a)
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::onArcAdd(Arc *a)
     {
         if (!initialized)
         {
@@ -444,7 +444,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::onVertexRemove(Vertex *v)
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::onVertexRemove(Vertex *v)
     {
         if (!initialized)
         {
@@ -461,7 +461,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::onArcRemove(Arc *a)
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::onArcRemove(Arc *a)
     {
         if (!initialized)
         {
@@ -541,13 +541,13 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::onSourceSet()
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::onSourceSet()
     {
         cleanup(false);
     }
 
     template <bool reverseArcDirection>
-    bool SimpleESTreeReservoirSampling<reverseArcDirection>::query(const Vertex *t)
+    bool SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::query(const Vertex *t)
     {
         PRINT_DEBUG("Querying reachability of " << t);
         if (t == source)
@@ -566,7 +566,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    std::vector<Arc *> SimpleESTreeReservoirSampling<reverseArcDirection>::queryPath(const Vertex *t)
+    std::vector<Arc *> SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::queryPath(const Vertex *t)
     {
         std::vector<Arc *> path;
         if (!query(t) || t == source)
@@ -591,7 +591,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::dumpData(std::ostream &os) const
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::dumpData(std::ostream &os) const
     {
         if (!initialized)
         {
@@ -619,7 +619,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::dumpTree(std::ostream &os)
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::dumpTree(std::ostream &os)
     {
         if (!initialized)
         {
@@ -636,7 +636,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    bool SimpleESTreeReservoirSampling<reverseArcDirection>::checkTree()
+    bool SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::checkTree()
     {
         BreadthFirstSearch<FastPropertyMap, true, reverseArcDirection> bfs;
         bfs.setStartVertex(source);
@@ -659,7 +659,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::rerun()
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::rerun()
     {
 #ifdef COLLECT_PR_DATA
         reruns++;
@@ -671,7 +671,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    DiGraph::size_type SimpleESTreeReservoirSampling<reverseArcDirection>::process(SESVertexData *vd, bool &limitReached)
+    DiGraph::size_type SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::process(SESVertexData *vd, bool &limitReached)
     {
 
         if (vd->level == 0UL)
@@ -833,7 +833,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::restoreTree(SESVertexData *rd)
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::restoreTree(SESVertexData *rd)
     {
         auto n = diGraph->getSize();
         DiGraph::size_type affectedLimit = maxAffectedRatio < 1.0
@@ -902,7 +902,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection>
-    void SimpleESTreeReservoirSampling<reverseArcDirection>::cleanup(bool freeSpace)
+    void SimpleESTreeReservoirSamplingMTE<reverseArcDirection>::cleanup(bool freeSpace)
     {
         if (initialized)
         {
@@ -934,6 +934,6 @@ namespace Algora
         initialized = false;
     }
 
-    template class SimpleESTreeReservoirSampling<false>;
-    template class SimpleESTreeReservoirSampling<true>;
+    template class SimpleESTreeReservoirSamplingMTE<false>;
+    template class SimpleESTreeReservoirSamplingMTE<true>;
 }

@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include <cstdlib>
-
+#include <random>
 
 template<typename RandomEngine> 
 Algora::ReservoirSampler<RandomEngine>::ReservoirSampler() : randomEngine{std::random_device{}()}, w{generateRandomNumber(randomEngine)}
@@ -34,4 +34,10 @@ void Algora::ReservoirSampler<RandomEngine>::reset()
     nextReservoirValueIndex = 0;
     reservoirValue = {};
     w = generateRandomNumber(randomEngine);
+}
+
+namespace Algora {
+template class ReservoirSampler<std::mt19937>;
+template class ReservoirSampler<std::minstd_rand>;
+template class ReservoirSampler<std::ranlux48_base>;
 }
