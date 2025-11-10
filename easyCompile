@@ -60,6 +60,10 @@ case $1 in
     EXTRA_ARGS="${EXTRA_ARGS} CONFIG+=profiling" # enable profiling code
     shift
     ;;
+    -n|--no-optimizations)
+    EXTRA_ARGS="${EXTRA_ARGS} CONFIG+=no-optimization" # turn off optimizations
+    shift
+    ;;
     --clang)
     SPEC="linux-clang"
     shift

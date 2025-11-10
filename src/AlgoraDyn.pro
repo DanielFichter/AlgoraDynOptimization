@@ -51,6 +51,10 @@ general {
   QMAKE_CXXFLAGS_RELEASE += -O3 -march=native -mtune=native
 }
 
+no-optimization {
+  QMAKE_CXXFLAGS_RELEASE -= -O1 -O2 -O3 
+}
+
 debugsymbols {
 	QMAKE_CXXFLAGS_RELEASE += -fno-omit-frame-pointer -g
 }
