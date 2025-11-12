@@ -20,8 +20,8 @@
  *   http://algora.xaikal.org
  */
 
-#ifndef SIMPLEESTREEMULTIPLETREEARCS_H
-#define SIMPLEESTREEMULTIPLETREEARCS_H
+#ifndef SIMPLEESDAG_H
+#define SIMPLEESDAG_H
 
 #include "algorithm.reachability.ss/dynamicsinglesourcereachabilityalgorithm.h"
 #include "property/propertymap.h"
@@ -34,15 +34,15 @@ namespace Algora
 {
 
     template <bool reverseArcDirection = false, unsigned maxNTreeArcs = 2>
-    class SimpleESTreeMultipleTreeArcs : public DynamicSingleSourceReachabilityAlgorithm
+    class SimpleESDAG : public DynamicSingleSourceReachabilityAlgorithm
     {
     public:
         // requeueLimit, maxAffectedRatio
         typedef std::tuple<unsigned int, double> ParameterSet;
 
-        explicit SimpleESTreeMultipleTreeArcs(unsigned int requeueLimit = 5, double maxAffectedRatio = .5);
-        explicit SimpleESTreeMultipleTreeArcs(const ParameterSet &params);
-        virtual ~SimpleESTreeMultipleTreeArcs() override;
+        explicit SimpleESDAG(unsigned int requeueLimit = 5, double maxAffectedRatio = .5);
+        explicit SimpleESDAG(const ParameterSet &params);
+        virtual ~SimpleESDAG() override;
         void setRequeueLimit(unsigned int limit)
         {
             requeueLimit = limit;
@@ -148,12 +148,12 @@ namespace Algora
     };
 
     // explicit instantiation declaration
-    extern template class SimpleESTreeMultipleTreeArcs<false, 2>;
-    extern template class SimpleESTreeMultipleTreeArcs<true, 2>;
-    extern template class SimpleESTreeMultipleTreeArcs<false, 3>;
-    extern template class SimpleESTreeMultipleTreeArcs<true, 3>;
-    extern template class SimpleESTreeMultipleTreeArcs<false, 4>;
-    extern template class SimpleESTreeMultipleTreeArcs<true, 4>;
+    extern template class SimpleESDAG<false, 2>;
+    extern template class SimpleESDAG<true, 2>;
+    extern template class SimpleESDAG<false, 3>;
+    extern template class SimpleESDAG<true, 3>;
+    extern template class SimpleESDAG<false, 4>;
+    extern template class SimpleESDAG<true, 4>;
 }
 
-#endif // SIMPLEESTREE_H
+#endif // SIMPLEESDAG_H

@@ -20,7 +20,7 @@
  *   http://algora.xaikal.org
  */
 
-#include "simpleestree_multipletreearcs.h"
+#include "simpleesdag.h"
 #include "graph/vertex.h"
 #include "graph/arc.h"
 #include "algorithm.basic.traversal/breadthfirstsearch.h"
@@ -32,10 +32,10 @@
 #include <climits>
 #include <cassert>
 
-// #define DEBUG_SIMPLEESTREE
+// #define DEBUG_SIMPLEESDAG
 
 #include <iostream>
-#ifdef DEBUG_SIMPLEESTREE
+#ifdef DEBUG_SIMPLEESDAG
 #define PRINT_DEBUG(msg) std::cerr << msg << std::endl;
 #define IF_DEBUG(cmd) cmd;
 #else
@@ -46,7 +46,7 @@
 namespace Algora
 {
 
-#ifdef DEBUG_SIMPLEESTREE
+#ifdef DEBUG_SIMPLEESDAG
     void printQueue(boost::circular_buffer<SESVertexDataMultipleParents<maxNTreeArcs> *> q)
     {
         std::cerr << "PriorityQueue: ";
@@ -60,13 +60,13 @@ namespace Algora
 #endif
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::SimpleESTreeMultipleTreeArcs(unsigned int requeueLimit, double maxAffectedRatio)
-        : SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>(std::make_tuple(requeueLimit, maxAffectedRatio))
+    SimpleESDAG<reverseArcDirection, maxNTreeArcs>::SimpleESDAG(unsigned int requeueLimit, double maxAffectedRatio)
+        : SimpleESDAG<reverseArcDirection, maxNTreeArcs>(std::make_tuple(requeueLimit, maxAffectedRatio))
     {
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::SimpleESTreeMultipleTreeArcs(const SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::ParameterSet &params)
+    SimpleESDAG<reverseArcDirection, maxNTreeArcs>::SimpleESDAG(const SimpleESDAG<reverseArcDirection, maxNTreeArcs>::ParameterSet &params)
         : DynamicSingleSourceReachabilityAlgorithm(), root(nullptr),
           initialized(false), requeueLimit(std::get<0>(params)),
           maxAffectedRatio(std::get<1>(params)),
@@ -86,13 +86,13 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::~SimpleESTreeMultipleTreeArcs()
+    SimpleESDAG<reverseArcDirection, maxNTreeArcs>::~SimpleESDAG()
     {
         cleanup(true);
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::getDepthOfBFSTree() const
+    DiGraph::size_type SimpleESDAG<reverseArcDirection, maxNTreeArcs>::getDepthOfBFSTree() const
     {
         DiGraph::size_type maxLevel = 0U;
         diGraph->mapVertices([&](Vertex *v)
@@ -104,7 +104,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::getNumReachable() const
+    DiGraph::size_type SimpleESDAG<reverseArcDirection, maxNTreeArcs>::getNumReachable() const
     {
         DiGraph::size_type numR = 0U;
         diGraph->mapVertices([&](Vertex *v)
@@ -116,14 +116,14 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::run()
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::run()
     {
         if (initialized)
         {
             return;
         }
 
-        PRINT_DEBUG("Initializing SimpleESTreeMultipleTreeArcs...");
+        PRINT_DEBUG("Initializing SimpleESDAG...");
 
         if (reachable.size() < diGraph->getSize())
         {
@@ -224,7 +224,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    std::string SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::getProfilingInfo() const
+    std::string SimpleESDAG<reverseArcDirection, maxNTreeArcs>::getProfilingInfo() const
     {
         std::stringstream ss;
 #ifdef COLLECT_PR_DATA
@@ -252,7 +252,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::getProfile() const
+    DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESDAG<reverseArcDirection, maxNTreeArcs>::getProfile() const
     {
         auto profile = DynamicSingleSourceReachabilityAlgorithm::getProfile();
         profile.push_back(std::make_pair(std::string("vertices_moved_down"), movesDown));
@@ -277,7 +277,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onDiGraphSet()
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::onDiGraphSet()
     {
         DynamicSingleSourceReachabilityAlgorithm::onDiGraphSet();
         cleanup(false);
@@ -300,14 +300,14 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onDiGraphUnset()
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::onDiGraphUnset()
     {
         DynamicSingleSourceReachabilityAlgorithm::onDiGraphUnset();
         cleanup(true);
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onVertexAdd(Vertex *v)
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::onVertexAdd(Vertex *v)
     {
         if (!initialized)
         {
@@ -320,7 +320,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onArcAdd(Arc *a)
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::onArcAdd(Arc *a)
     {
         if (!initialized)
         {
@@ -479,7 +479,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onVertexRemove(Vertex *v)
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::onVertexRemove(Vertex *v)
     {
         if (!initialized)
         {
@@ -496,7 +496,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onArcRemove(Arc *a)
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::onArcRemove(Arc *a)
     {
         if (!initialized)
         {
@@ -577,13 +577,13 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::onSourceSet()
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::onSourceSet()
     {
         cleanup(false);
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    bool SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::query(const Vertex *t)
+    bool SimpleESDAG<reverseArcDirection, maxNTreeArcs>::query(const Vertex *t)
     {
         PRINT_DEBUG("Querying reachability of " << t);
         if (t == source)
@@ -602,7 +602,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    std::vector<Arc *> SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::queryPath(const Vertex *t)
+    std::vector<Arc *> SimpleESDAG<reverseArcDirection, maxNTreeArcs>::queryPath(const Vertex *t)
     {
         std::vector<Arc *> path;
         if (!query(t) || t == source)
@@ -630,7 +630,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::dumpData(std::ostream &os) const
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::dumpData(std::ostream &os) const
     {
         if (!initialized)
         {
@@ -659,7 +659,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::dumpTree(std::ostream &os)
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::dumpTree(std::ostream &os)
     {
         if (!initialized)
         {
@@ -709,7 +709,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    bool SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::checkTree()
+    bool SimpleESDAG<reverseArcDirection, maxNTreeArcs>::checkTree()
     {
         BreadthFirstSearch<FastPropertyMap, true, reverseArcDirection> bfs;
         bfs.setStartVertex(source);
@@ -732,7 +732,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::rerun()
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::rerun()
     {
 #ifdef COLLECT_PR_DATA
         reruns++;
@@ -744,7 +744,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    DiGraph::size_type SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::process(SESVertexDataMultipleParents<maxNTreeArcs> *vd, bool &limitReached)
+    DiGraph::size_type SimpleESDAG<reverseArcDirection, maxNTreeArcs>::process(SESVertexDataMultipleParents<maxNTreeArcs> *vd, bool &limitReached)
     {
 
         if (vd->level == 0UL)
@@ -916,7 +916,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::restoreTree(SESVertexDataMultipleParents<maxNTreeArcs> *rd)
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::restoreTree(SESVertexDataMultipleParents<maxNTreeArcs> *rd)
     {
         auto n = diGraph->getSize();
         DiGraph::size_type affectedLimit = maxAffectedRatio < 1.0
@@ -985,7 +985,7 @@ namespace Algora
     }
 
     template <bool reverseArcDirection, unsigned maxNTreeArcs>
-    void SimpleESTreeMultipleTreeArcs<reverseArcDirection, maxNTreeArcs>::cleanup(bool freeSpace)
+    void SimpleESDAG<reverseArcDirection, maxNTreeArcs>::cleanup(bool freeSpace)
     {
         if (initialized)
         {
@@ -1017,10 +1017,10 @@ namespace Algora
         initialized = false;
     }
 
-    template class SimpleESTreeMultipleTreeArcs<false, 2>;
-    template class SimpleESTreeMultipleTreeArcs<true, 2>;
-    template class SimpleESTreeMultipleTreeArcs<false, 3>;
-    template class SimpleESTreeMultipleTreeArcs<true, 3>;
-    template class SimpleESTreeMultipleTreeArcs<false, 4>;
-    template class SimpleESTreeMultipleTreeArcs<true, 4>;
+    template class SimpleESDAG<false, 2>;
+    template class SimpleESDAG<true, 2>;
+    template class SimpleESDAG<false, 3>;
+    template class SimpleESDAG<true, 3>;
+    template class SimpleESDAG<false, 4>;
+    template class SimpleESDAG<true, 4>;
 }
