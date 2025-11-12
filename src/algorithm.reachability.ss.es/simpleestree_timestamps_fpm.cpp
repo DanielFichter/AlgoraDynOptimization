@@ -650,7 +650,7 @@ DiGraph::size_type SimpleESTreeTimeStampsFPM<reverseArcDirection, preferOlder>::
     auto oldVLevel = vd->level;
     auto minParentLevel = parent == nullptr ? SESVertexData::UNREACHABLE : parent->level;
     auto treeArc = vd->treeArc;
-    DynamicTime bestCreationTime = parent == nullptr ? (preferOlder ? dyDiGraph->getMaxTime() : 0) : creationTime[treeArc];
+    DynamicTime bestCreationTime = parent == nullptr ? worstCreationTime : creationTime[treeArc]; 
 
     PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
 
@@ -676,8 +676,7 @@ DiGraph::size_type SimpleESTreeTimeStampsFPM<reverseArcDirection, preferOlder>::
                         << ", parent " << parent);
             assert (minParentLevel + 1 >= oldVLevel);
         }
-        // TODO: use if constexpr
-        else if (pLevel == minParentLevel && ((preferOlder && creationTime[a] < bestCreationTime) || (!preferOlder && creationTime[a] > bestCreationTime)))
+        else if (pLevel == minParentLevel && isBetter(creationTime[a], bestCreationTime))
         {
             parent = pd;
             treeArc = a;
@@ -843,6 +842,16 @@ void SimpleESTreeTimeStampsFPM<reverseArcDirection, preferOlder>::cleanup(bool f
     }
 
     initialized = false;
+}
+
+template<bool reverseArcDirection, bool preferOlder>
+bool SimpleESTreeTimeStampsFPM<reverseArcDirection, preferOlder>::isBetter(DynamicTime lhs, DynamicTime rhs) {
+    if constexpr(preferOlder) {
+        return lhs < rhs;
+    }
+    else {
+        return lhs > rhs;
+    }
 }
 
 template class SimpleESTreeTimeStampsFPM<false, false>;

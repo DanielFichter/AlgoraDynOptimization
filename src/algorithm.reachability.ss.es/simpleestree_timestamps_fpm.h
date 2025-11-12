@@ -28,6 +28,7 @@
 #include "property/fastpropertymap.h"
 #include "sesvertexdata.h"
 #include "simpleestree_timestamps.h"
+#include <limits>
 #include <sstream>
 #include <boost/circular_buffer.hpp>
 
@@ -105,6 +106,7 @@ public:
 private:
     typedef boost::circular_buffer<SESVertexData*> PriorityQueue;
     typedef long long unsigned DynamicTime;
+    static constexpr DynamicTime worstCreationTime = preferOlder ? std::numeric_limits<DynamicTime>::max() : 0;
 
     FastPropertyMap<SESVertexData*> data;
     FastPropertyMap<bool> reachable;
@@ -141,6 +143,7 @@ private:
     bool checkTree();
     void rerun();
     DiGraph::size_type process(SESVertexData *vd, bool &limitReached);
+    static bool isBetter(DynamicTime, DynamicTime);
 };
 
 // explicit instantiation declaration
