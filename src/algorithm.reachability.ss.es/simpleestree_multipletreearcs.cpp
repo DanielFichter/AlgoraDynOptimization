@@ -1021,4 +1021,6 @@ namespace Algora
     template class SimpleESTreeMultipleTreeArcs<true, 2>;
     template class SimpleESTreeMultipleTreeArcs<false, 3>;
     template class SimpleESTreeMultipleTreeArcs<true, 3>;
+    template class SimpleESTreeMultipleTreeArcs<false, 4>;
+    template class SimpleESTreeMultipleTreeArcs<true, 4>;
 }

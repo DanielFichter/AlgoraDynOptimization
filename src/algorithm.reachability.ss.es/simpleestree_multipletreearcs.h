@@ -152,6 +152,8 @@ namespace Algora
     extern template class SimpleESTreeMultipleTreeArcs<true, 2>;
     extern template class SimpleESTreeMultipleTreeArcs<false, 3>;
     extern template class SimpleESTreeMultipleTreeArcs<true, 3>;
+    extern template class SimpleESTreeMultipleTreeArcs<false, 4>;
+    extern template class SimpleESTreeMultipleTreeArcs<true, 4>;
 }
 
 #endif // SIMPLEESTREE_H
