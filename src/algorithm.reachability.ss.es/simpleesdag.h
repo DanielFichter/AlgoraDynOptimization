@@ -154,6 +154,8 @@ namespace Algora
     extern template class SimpleESDAG<true, 3>;
     extern template class SimpleESDAG<false, 4>;
     extern template class SimpleESDAG<true, 4>;
+    extern template class SimpleESDAG<false, 5>;
+    extern template class SimpleESDAG<true, 5>;
 }
 
 #endif // SIMPLEESDAG_H

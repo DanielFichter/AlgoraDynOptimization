@@ -1023,4 +1023,6 @@ namespace Algora
     template class SimpleESDAG<true, 3>;
     template class SimpleESDAG<false, 4>;
     template class SimpleESDAG<true, 4>;
+    template class SimpleESDAG<false, 5>;
+    template class SimpleESDAG<true, 5>;
 }
