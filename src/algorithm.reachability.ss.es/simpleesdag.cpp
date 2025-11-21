@@ -800,7 +800,6 @@ namespace Algora
             prVertexConsidered();
 #endif
             auto pLevel = pd->level;
-            // TODO: check if parent level is unreachable!
             if (pLevel == minParentLevel && pLevel != SESVertexDataMultipleParents<maxNTreeArcs>::UNREACHABLE)
             {
                 if (nParents < maxNTreeArcs)
