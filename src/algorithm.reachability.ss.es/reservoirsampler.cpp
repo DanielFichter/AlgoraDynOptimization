@@ -5,7 +5,7 @@
 #include <random>
 
 template<typename RandomEngine> 
-Algora::ReservoirSampler<RandomEngine>::ReservoirSampler() : randomEngine{std::random_device{}()}, w{generateRandomNumber(randomEngine)}
+Algora::ReservoirSampler<RandomEngine>::ReservoirSampler(typename RandomEngine::result_type seed) : randomEngine{seed}, w{generateRandomNumber(randomEngine)}
 {
 }
 

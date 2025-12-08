@@ -24,7 +24,10 @@
 #include "graph/vertex.h"
 #include "algorithm.basic.traversal/breadthfirstsearch.h"
 #include "algorithm/digraphalgorithmexception.h"
+#include "reservoirsampler.h"
 
+#include <cstdint>
+#include <random>
 #include <vector>
 #include <climits>
 #include <cassert>
@@ -76,7 +79,9 @@ namespace Algora
     {
         data.setDefaultValue(nullptr);
         reachable.setDefaultValue(false);
-
+        std::random_device rd;
+        const auto seed = static_cast<uint_fast32_t>(rd());
+        sampler = ReservoirSampler<std::minstd_rand>(seed);
         timesInQueue.setDefaultValue(0U);
     }
 
@@ -84,6 +89,11 @@ namespace Algora
     SimpleESTreeReservoirSamplingLCE<reverseArcDirection>::~SimpleESTreeReservoirSamplingLCE()
     {
         cleanup(true);
+    }
+
+    template <bool reverseArcDirection>
+    void SimpleESTreeReservoirSamplingLCE<reverseArcDirection>::setRandomSeed(std::uint_fast32_t seed) {
+        sampler = ReservoirSampler<std::minstd_rand>(seed);
     }
 
     template <bool reverseArcDirection>

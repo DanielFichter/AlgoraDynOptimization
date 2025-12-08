@@ -29,6 +29,7 @@
 #include "sesvertexdata.h"
 #include "arcpool.h"
 #include "sesvertexdata.h"
+#include <cstdint>
 #include <sstream>
 #include <random>
 #include <utility>
@@ -50,6 +51,7 @@ public:
 
     explicit SimpleESTreeSelectRandomLCE(unsigned int requeueLimit = 5, double maxAffectedRatio = .5);
     explicit SimpleESTreeSelectRandomLCE(const ParameterSet &params);
+    void setRandomSeed(std::uint_fast32_t);
     virtual ~SimpleESTreeSelectRandomLCE() override;
     void setRequeueLimit(unsigned int limit) {
         requeueLimit = limit;

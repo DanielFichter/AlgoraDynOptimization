@@ -28,6 +28,7 @@
 #include "property/fastpropertymap.h"
 #include "sesvertexdata.h"
 #include "reservoirsampler.h"
+#include <atomic>
 #include <random>
 #include <sstream>
 #include <boost/circular_buffer.hpp>
@@ -53,6 +54,7 @@ namespace Algora
         {
             maxAffectedRatio = ratio;
         }
+        void setRandomSeed(std::uint_fast32_t);
         DiGraph::size_type getDepthOfBFSTree() const;
         DiGraph::size_type getNumReachable() const;
 

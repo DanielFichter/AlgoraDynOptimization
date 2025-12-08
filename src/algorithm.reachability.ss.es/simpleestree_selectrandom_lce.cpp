@@ -22,6 +22,8 @@
 
 #include "simpleestree_selectrandom_lce.h"
 
+#include <cstdint>
+#include <random>
 #include <vector>
 #include <climits>
 #include <cassert>
@@ -76,7 +78,9 @@ SimpleESTreeSelectRandomLCE<reverseArcDirection>::SimpleESTreeSelectRandomLCE(co
 {
     data.setDefaultValue(nullptr);
     reachable.setDefaultValue(false);
-
+    std::random_device rd;
+    const auto seed = static_cast<std::uint_fast32_t>(rd());
+    generateRandomNumber = std::minstd_rand(seed);
     timesInQueue.setDefaultValue(0U);
 }
 
@@ -84,6 +88,11 @@ template<bool reverseArcDirection>
 SimpleESTreeSelectRandomLCE<reverseArcDirection>::~SimpleESTreeSelectRandomLCE()
 {
     cleanup(true);
+}
+
+template<bool reverseArcDirection>
+void SimpleESTreeSelectRandomLCE<reverseArcDirection>::setRandomSeed(std::uint_fast32_t seed) {
+    generateRandomNumber = std::minstd_rand{seed};
 }
 
 template<bool reverseArcDirection>

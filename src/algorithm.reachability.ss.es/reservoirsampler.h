@@ -15,7 +15,7 @@ namespace Algora
     {
     public:
         using ArcParentPair = std::pair<Arc *, SESVertexData *>;
-        ReservoirSampler();
+        ReservoirSampler(typename RandomEngine::result_type seed = 42);
         void provide(ArcParentPair);
         const ArcParentPair &sample() const;
         void reset();
