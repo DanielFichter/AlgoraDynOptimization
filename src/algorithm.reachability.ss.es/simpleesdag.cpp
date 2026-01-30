@@ -182,7 +182,6 @@ namespace Algora
                               {
                                   if (hd->hasAnyParent())
                                   {
-                                      // TODO: also consider that multiarcs can exist, i.e. the parent can be the same for multiple arcs
                                       if (td->level == hd->getParentData(0)->level && !hd->isParent(td))
                                       {
                                         hd->tryAddParent(td, mutableA);
@@ -873,7 +872,6 @@ namespace Algora
 #ifdef COLLECT_PR_DATA
                 prVertexConsidered();
 #endif
-                // TODO: if is lowest level treearc, I think
                 if (hd->isTreeArc(a))
                 {
                     if (timesInQueue[head] < requeueLimit)
