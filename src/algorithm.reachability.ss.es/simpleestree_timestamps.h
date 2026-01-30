@@ -24,15 +24,18 @@
 #define SIMPLEESTREETIMESTAMPS_H
 
 #include "algorithm.reachability.ss/dynamicsinglesourcereachabilityalgorithm.h"
+#include "property/propertymap.h"
 #include "property/fastpropertymap.h"
-#include "sesvertexdata_timestamps.h"
+#include "sesvertexdata.h"
+#include "simpleestree_timestamps.h"
+#include <limits>
 #include <sstream>
 #include <boost/circular_buffer.hpp>
 
 namespace Algora {
 class DynamicDiGraph;
 
-template<bool reverseArcDirection = false, bool preferOlderArc = true>
+template<bool reverseArcDirection = false, bool preferOlder = true>
 class SimpleESTreeTimeStamps : public DynamicSingleSourceReachabilityAlgorithm
 {
 public:
@@ -49,6 +52,7 @@ public:
         maxAffectedRatio = ratio;
     }
     void setDyDiGraph(const DynamicDiGraph*);
+    
 		DiGraph::size_type getDepthOfBFSTree() const;
 		DiGraph::size_type getNumReachable() const;
 
@@ -100,13 +104,16 @@ public:
     virtual void dumpData(std::ostream &os) const override;
 
 private:
-    typedef boost::circular_buffer<SESVertexDataTimestamps*> PriorityQueue;
+    typedef boost::circular_buffer<SESVertexData*> PriorityQueue;
+    typedef long long unsigned DynamicTime;
+    static constexpr DynamicTime worstCreationTime = preferOlder ? std::numeric_limits<DynamicTime>::max() : 0;
 
-    FastPropertyMap<SESVertexDataTimestamps*> data;
+    FastPropertyMap<SESVertexData*> data;
     FastPropertyMap<bool> reachable;
     FastPropertyMap<unsigned int> timesInQueue;
+    FastPropertyMap<DynamicTime> creationTime;
     PriorityQueue queue;
-    const DynamicDiGraph * dyDiGraph;
+    const DynamicDiGraph* dyDiGraph;
 
     Vertex *root;
     bool initialized;
@@ -130,12 +137,13 @@ private:
     profiling_counter rerunRequeued;
     profiling_counter rerunNumAffected;
 
-    void restoreTree(SESVertexDataTimestamps *rd);
+    void restoreTree(SESVertexData *rd);
     void cleanup(bool freeSpace);
     void dumpTree(std::ostream &os);
     bool checkTree();
     void rerun();
-    DiGraph::size_type process(SESVertexDataTimestamps *vd, bool &limitReached);
+    DiGraph::size_type process(SESVertexData *vd, bool &limitReached);
+    static bool isBetter(DynamicTime, DynamicTime);
 };
 
 // explicit instantiation declaration
@@ -145,4 +153,4 @@ extern template class SimpleESTreeTimeStamps<true, false>;
 extern template class SimpleESTreeTimeStamps<true, true>;
 }
 
-#endif // SIMPLEESTREETIMESTAMPS_H
+#endif // SimpleESTreeTimeStampsTIMESTAMPS_H

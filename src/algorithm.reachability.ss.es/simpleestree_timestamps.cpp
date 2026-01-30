@@ -23,15 +23,12 @@
 #include "simpleestree_timestamps.h"
 #include "graph.dyn/dynamicdigraph.h"
 
-#include <cstddef>
-#include <vector>
 #include <climits>
 #include <cassert>
 
 #include "graph/vertex.h"
 #include "algorithm.basic.traversal/breadthfirstsearch.h"
 #include "algorithm/digraphalgorithmexception.h"
-#include "sesvertexdata_timestamps.h"
 
 //#define DEBUG_SIMPLEESTREE
 
@@ -47,7 +44,7 @@
 namespace Algora {
 
 #ifdef DEBUG_SIMPLEESTREE
-void printQueue(boost::circular_buffer<SESVertexDataTimestamps*> q) {
+void printQueue(boost::circular_buffer<SESVertexData*> q) {
     std::cerr << "PriorityQueue: ";
     while(!q.empty()) {
         std::cerr << q.front()->vertex << "[" << q.front()->level << "]" << ", ";
@@ -58,13 +55,13 @@ void printQueue(boost::circular_buffer<SESVertexDataTimestamps*> q) {
 #endif
 
 
-template<bool reverseArcDirection, bool preferOlderArc>
-SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::SimpleESTreeTimeStamps(unsigned int requeueLimit, double maxAffectedRatio)
-    : SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>(std::make_pair(requeueLimit, maxAffectedRatio))
+template<bool reverseArcDirection, bool preferOlder>
+SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::SimpleESTreeTimeStamps(unsigned int requeueLimit, double maxAffectedRatio)
+    : SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>(std::make_pair(requeueLimit, maxAffectedRatio))
 { }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::SimpleESTreeTimeStamps(const SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::ParameterSet &params)
+template<bool reverseArcDirection, bool preferOlder>
+SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::SimpleESTreeTimeStamps(const SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::ParameterSet &params)
     : DynamicSingleSourceReachabilityAlgorithm(), root(nullptr),
       initialized(false), requeueLimit(std::get<0>(params)),
       maxAffectedRatio(std::get<1>(params)),
@@ -83,20 +80,14 @@ SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::SimpleESTreeTimeSta
     timesInQueue.setDefaultValue(0U);
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::~SimpleESTreeTimeStamps()
+template<bool reverseArcDirection, bool preferOlder>
+SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::~SimpleESTreeTimeStamps()
 {
     cleanup(true);
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::setDyDiGraph(const DynamicDiGraph* newDyDiGraph)
-{
-    dyDiGraph = newDyDiGraph;
-}
-
-template<bool reverseArcDirection, bool preferOlderArc>
-DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::getDepthOfBFSTree() const
+template<bool reverseArcDirection, bool preferOlder>
+DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::getDepthOfBFSTree() const
 {
 	DiGraph::size_type maxLevel = 0U;
     diGraph->mapVertices([&](Vertex *v) {
@@ -107,8 +98,8 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
     return maxLevel;
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::getNumReachable() const
+template<bool reverseArcDirection, bool preferOlder>
+DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::getNumReachable() const
 {
 	DiGraph::size_type numR = 0U;
     diGraph->mapVertices([&](Vertex *v) {
@@ -119,8 +110,14 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
     return numR;
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::run()
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::setDyDiGraph(const DynamicDiGraph* newDyDiGraph)
+{
+    dyDiGraph = newDyDiGraph;
+}
+
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::run()
 {
     if (initialized) {
         return;
@@ -141,7 +138,7 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::run()
    }
    bfs.setStartVertex(root);
    if (data[root] == nullptr) {
-      data[root] = new SESVertexDataTimestamps(root, nullptr, nullptr, 0);
+      data[root] = new SESVertexData(root, nullptr, nullptr, 0);
    } else {
        data[root]->reset(nullptr, nullptr, 0);
    }
@@ -161,80 +158,24 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::run()
             h = a->getHead();
         }
         if (data[h] == nullptr) {
-            data[h] = new SESVertexDataTimestamps(h, data(t), a);
+            data[h] = new SESVertexData(h, data(t), a);
         } else {
             data[h]->reset(data(t), a);
         }
         reachable[h] = true;
-        data[h]->addArc(a, 0);
         PRINT_DEBUG( "(" << a->getTail() << ", " << a->getHead() << ")" << " is a tree arc.")
 #ifdef COLLECT_PR_DATA
         prArcConsidered();
 #endif
    });
-bfs.onNonTreeArcDiscover([this](Arc *a) {
-        if (a->isLoop()
-                || (!reverseArcDirection && a->getHead() == source)
-                || (reverseArcDirection && a->getTail() == source)) {
-            return;
-        }
-#ifdef COLLECT_PR_DATA
-        prArcConsidered();
-#endif
-        Vertex *h;
-        if (reverseArcDirection) {
-            h = a->getTail();
-        } else {
-            h = a->getHead();
-        }
-        SESVertexDataTimestamps *hd = data(h);
-        PRINT_DEBUG( a << " is a non-tree arc.")
-        hd->addArc(a, 0);
-   });
-
    runAlgorithm(bfs, diGraph);
-
-   diGraph->mapArcs([this](Arc *a) {
-#ifdef COLLECT_PR_DATA
-        prArcConsidered();
-#endif
-       if (a->isLoop()
-                || (!reverseArcDirection && a->getHead() == source)
-                || (reverseArcDirection && a->getTail() == source)) {
-           return;
-       }
-       Vertex *t;
-       Vertex *h;
-       if (reverseArcDirection) {
-           t = a->getHead();
-           h = a->getTail();
-       } else {
-           t = a->getTail();
-           h = a->getHead();
-       }
-       SESVertexDataTimestamps *td = data(t);
-       SESVertexDataTimestamps *hd = data(h);
-
-       if (td == nullptr) {
-           td = new SESVertexDataTimestamps(t);
-           data[t] = td;
-       }
-       if (hd == nullptr) {
-           hd = new SESVertexDataTimestamps(h);
-           data[h] = hd;
-       }
-       if (!td->isReachable()) {
-            PRINT_DEBUG( a << " is an unvisited non-tree arc.")
-            hd->addArc(a, 0);
-       }
-   });
 
    diGraph->mapVertices([this](Vertex *v) {
 #ifdef COLLECT_PR_DATA
         prVertexConsidered();
 #endif
        if (data(v) == nullptr) {
-           data[v] = new SESVertexDataTimestamps(v);
+           data[v] = new SESVertexData(v);
            PRINT_DEBUG( v << " is a unreachable.")
        }
    });
@@ -251,8 +192,8 @@ bfs.onNonTreeArcDiscover([this](Arc *a) {
    assert(checkTree());
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-std::string SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::getProfilingInfo() const
+template<bool reverseArcDirection, bool preferOlder>
+std::string SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::getProfilingInfo() const
 {
     std::stringstream ss;
 #ifdef COLLECT_PR_DATA
@@ -279,8 +220,8 @@ std::string SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::getProf
     return ss.str();
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::getProfile() const
+template<bool reverseArcDirection, bool preferOlder>
+DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::getProfile() const
 {
     auto profile = DynamicSingleSourceReachabilityAlgorithm::getProfile();
     profile.push_back(std::make_pair(std::string("vertices_moved_down"), movesDown));
@@ -304,8 +245,8 @@ DynamicSingleSourceReachabilityAlgorithm::Profile SimpleESTreeTimeStamps<reverse
     return profile;
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onDiGraphSet()
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::onDiGraphSet()
 {
     DynamicSingleSourceReachabilityAlgorithm::onDiGraphSet();
     cleanup(false);
@@ -327,15 +268,15 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onDiGraphSet()
     // called by cleanup
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onDiGraphUnset()
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::onDiGraphUnset()
 {
     DynamicSingleSourceReachabilityAlgorithm::onDiGraphUnset();
     cleanup(true);
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onVertexAdd(Vertex *v)
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::onVertexAdd(Vertex *v)
 {
     if (!initialized) {
         return;
@@ -343,11 +284,11 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onVertexAdd(Ve
 
     assert(data(v) == nullptr);
 
-    data[v] = new SESVertexDataTimestamps(v);
+    data[v] = new SESVertexData(v);
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcAdd(Arc *a)
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::onArcAdd(Arc *a)
 {
     if (!initialized) {
         return;
@@ -381,7 +322,7 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcAdd(Arc *
     assert(td != nullptr);
     assert(hd != nullptr);
 
-    hd->addArc(a, dyDiGraph->getCurrentTime());
+    creationTime[a] = dyDiGraph->getCurrentTime();
 
     if (!td->isReachable()) {
         PRINT_DEBUG("Tail is unreachable.")
@@ -447,7 +388,6 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcAdd(Arc *
 #ifdef COLLECT_PR_DATA
         prVertexConsidered();
 #endif
-        // TODO: here one could substitute the arc with an arc that has the best birth
         if (!ahd->isReachable() ||  atd->level + 1 < ahd->level) {
 #ifdef COLLECT_PR_DATA
             movesUp++;
@@ -481,8 +421,8 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcAdd(Arc *
    assert(checkTree());
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onVertexRemove(Vertex *v)
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::onVertexRemove(Vertex *v)
 {
     if (!initialized) {
         return;
@@ -496,8 +436,8 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onVertexRemove
      }
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcRemove(Arc *a)
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::onArcRemove(Arc *a)
 {
    if (!initialized) {
         return;
@@ -531,8 +471,6 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcRemove(Ar
         throw std::logic_error("Should not happen");
     }
 
-    hd->removeArc(a);
-
     if (!hd->isReachable()) {
         if (reverseArcDirection) {
             PRINT_DEBUG("Tail of arc is already unreachable. Nothing to do.")
@@ -565,14 +503,14 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onArcRemove(Ar
    assert(checkTree());
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::onSourceSet()
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::onSourceSet()
 {
     cleanup(false);
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-bool SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::query(const Vertex *t)
+template<bool reverseArcDirection, bool preferOlder>
+bool SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::query(const Vertex *t)
 {
     PRINT_DEBUG("Querying reachability of " << t);
     if (t == source) {
@@ -588,8 +526,8 @@ bool SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::query(const Ve
     return reachable(t);
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-std::vector<Arc *> SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::queryPath(const Vertex *t)
+template<bool reverseArcDirection, bool preferOlder>
+std::vector<Arc *> SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::queryPath(const Vertex *t)
 {
     std::vector<Arc*> path;
     if (!query(t) || t == source) {
@@ -610,8 +548,8 @@ std::vector<Arc *> SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
     return path;
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::dumpData(std::ostream &os) const
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::dumpData(std::ostream &os) const
 {
     if (!initialized) {
         os << "uninitialized" << std::endl;
@@ -632,8 +570,8 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::dumpData(std::
     }
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::dumpTree(std::ostream &os)
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::dumpTree(std::ostream &os)
 {
     if (!initialized) {
         os << "uninitialized" << std::endl;
@@ -646,8 +584,8 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::dumpTree(std::
     }
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-bool SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::checkTree()
+template<bool reverseArcDirection, bool preferOlder>
+bool SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::checkTree()
 {
    BreadthFirstSearch<FastPropertyMap,true,reverseArcDirection> bfs;
    bfs.setStartVertex(source);
@@ -659,7 +597,7 @@ bool SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::checkTree()
 
    bool ok = true;
    diGraph->mapVertices([&](Vertex *v) {
-       auto bfsLevel = levels[v] == bfs.INF ? SESVertexDataTimestamps::UNREACHABLE : levels[v];
+       auto bfsLevel = levels[v] == bfs.INF ? SESVertexData::UNREACHABLE : levels[v];
        if (data[v]->level != bfsLevel) {
            std::cerr << "Level mismatch for vertex " << data[v]
                         << ": expected level " << bfsLevel << std::endl;
@@ -669,8 +607,8 @@ bool SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::checkTree()
    return ok;
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::rerun()
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::rerun()
 {
 #ifdef COLLECT_PR_DATA
     reruns++;
@@ -682,8 +620,8 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::rerun()
     run();
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::process(SESVertexDataTimestamps *vd, bool &limitReached) {
+template<bool reverseArcDirection, bool preferOlder>
+DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::process(SESVertexData *vd, bool &limitReached) {
 
     if (vd->level == 0UL) {
         PRINT_DEBUG("No need to process source vertex " << vd << ".");
@@ -710,14 +648,13 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
 
     auto parent = oldParent;
     auto oldVLevel = vd->level;
-    auto minParentLevel = parent == nullptr ? SESVertexDataTimestamps::UNREACHABLE : parent->level;
+    auto minParentLevel = parent == nullptr ? SESVertexData::UNREACHABLE : parent->level;
     auto treeArc = vd->treeArc;
-
-    SESVertexDataTimestamps::DynamicTime bestBirth = preferOlderArc ? dyDiGraph->getMaxTime() : 0;
+    DynamicTime bestCreationTime = parent == nullptr ? worstCreationTime : creationTime[treeArc]; 
 
     PRINT_DEBUG("Min parent level is " << minParentLevel << ".");
 
-    auto findParent = [this,&parent,&minParentLevel,&oldVLevel,&treeArc, &bestBirth](Arc* a, SESVertexDataTimestamps::DynamicTime birth) {
+    auto findParent = [this,&parent,&minParentLevel,&oldVLevel,&treeArc,&bestCreationTime](Arc *a) {
 #ifdef COLLECT_PR_DATA
             prArcConsidered();
 #endif
@@ -734,22 +671,27 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
             minParentLevel = pLevel;
             parent = pd;
             treeArc = a;
-            bestBirth = birth;
+            bestCreationTime = creationTime[a];
             PRINT_DEBUG("Update: Min parent level now is " << minParentLevel
                         << ", parent " << parent);
             assert (minParentLevel + 1 >= oldVLevel);
         }
-        else if (pLevel == minParentLevel && ((preferOlderArc && birth < bestBirth) || (!preferOlderArc && birth > bestBirth)))
+        else if (pLevel == minParentLevel && isBetter(creationTime[a], bestCreationTime))
         {
             parent = pd;
             treeArc = a;
-            bestBirth = birth;
+            bestCreationTime = creationTime[a];
         }
+        
+    };
+    auto abortReparenting = [&oldVLevel, &minParentLevel](const Arc *) {
+        return minParentLevel + 1 == oldVLevel;
     };
 
-    for (const auto& [a, birth]: vd->inArcInfos)
-    {
-        findParent(a, birth);
+    if (reverseArcDirection) {
+        diGraph->mapOutgoingArcsUntil(v, findParent, abortReparenting);
+    } else {
+        diGraph->mapIncomingArcsUntil(v, findParent, abortReparenting);
     }
 
     DiGraph::size_type levelDiff = 0U;
@@ -764,9 +706,8 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
                     << levelDiff);
     } else if (parent != oldParent || oldVLevel <= minParentLevel) {
         assert(parent->isReachable());
-        assert(minParentLevel != SESVertexDataTimestamps::UNREACHABLE);
+        assert(minParentLevel != SESVertexData::UNREACHABLE);
         vd->setParent(parent, treeArc);
-        vd->parentBirth = bestBirth;
         assert (vd->level >= oldVLevel);
         levelDiff = vd->level - oldVLevel;
         PRINT_DEBUG("Parent has changed, new parent is " << parent);
@@ -817,8 +758,8 @@ DiGraph::size_type SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::
     return levelDiff;
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::restoreTree(SESVertexDataTimestamps *rd)
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::restoreTree(SESVertexData *rd)
 {
     auto n = diGraph->getSize();
     DiGraph::size_type affectedLimit = maxAffectedRatio < 1.0
@@ -876,8 +817,8 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::restoreTree(SE
 #endif
 }
 
-template<bool reverseArcDirection, bool preferOlderArc>
-void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::cleanup(bool freeSpace)
+template<bool reverseArcDirection, bool preferOlder>
+void SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::cleanup(bool freeSpace)
 {
     if (initialized) {
         for (auto i = data.cbegin(); i != data.cend(); i++) {
@@ -901,6 +842,16 @@ void SimpleESTreeTimeStamps<reverseArcDirection, preferOlderArc>::cleanup(bool f
     }
 
     initialized = false;
+}
+
+template<bool reverseArcDirection, bool preferOlder>
+bool SimpleESTreeTimeStamps<reverseArcDirection, preferOlder>::isBetter(DynamicTime lhs, DynamicTime rhs) {
+    if constexpr(preferOlder) {
+        return lhs < rhs;
+    }
+    else {
+        return lhs > rhs;
+    }
 }
 
 template class SimpleESTreeTimeStamps<false, false>;
